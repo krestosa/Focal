@@ -69,51 +69,7 @@ jobs:
 
           print("Repository bootstrap validation passed.")
 
-      - name: Validate runtime guard behavior
-        shell: python
+      - name: Run runtime guard unit tests
         env:
           PYTHONPATH: .
-        run: |
-          from __future__ import annotations
-
-          import sys
-
-          from tools.runtime_guard import supervise
-
-          completed = supervise(
-              [sys.executable, "-c", "raise SystemExit(0)"],
-              limit_seconds=2.0,
-              soft_stop_seconds=1.0,
-              grace_seconds=0.5,
-              phase="IMPLEMENTATION",
-          )
-          assert completed.exit_code == 0
-          assert not completed.soft_stop_triggered
-          assert not completed.hard_kill_triggered
-          assert completed.signal_sent is None
-
-          stopped = supervise(
-              [sys.executable, "-c", "import time; time.sleep(5)"],
-              limit_seconds=2.0,
-              soft_stop_seconds=0.1,
-              grace_seconds=0.5,
-              phase="IMPLEMENTATION",
-          )
-          assert stopped.soft_stop_triggered
-          assert not stopped.hard_kill_triggered
-          assert stopped.signal_sent == "SIGTERM_SOFT_STOP"
-          assert stopped.elapsed_seconds < 2.0
-
-          allowed = supervise(
-              [sys.executable, "-c", "import time; time.sleep(0.2)"],
-              limit_seconds=2.0,
-              soft_stop_seconds=0.05,
-              grace_seconds=0.5,
-              phase="CLEANUP",
-          )
-          assert allowed.exit_code == 0
-          assert allowed.soft_stop_triggered
-          assert not allowed.hard_kill_triggered
-          assert allowed.signal_sent is None
-
-          print("Runtime guard validation passed.")
+        run: python -m unittest -v tests/test_runtime_guard.py
