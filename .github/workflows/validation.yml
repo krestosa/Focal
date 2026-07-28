@@ -71,6 +71,8 @@ jobs:
 
       - name: Validate runtime guard behavior
         shell: python
+        env:
+          PYTHONPATH: .
         run: |
           from __future__ import annotations
 
