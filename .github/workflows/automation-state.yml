@@ -3,7 +3,7 @@ name: Automation State Coordinator
 on:
   issue_comment:
     types:
-      - created
+      - edited
 
 permissions:
   contents: read
@@ -16,8 +16,9 @@ concurrency:
 jobs:
   coordinate:
     if: >-
-      github.event.issue.number == 2 &&
-      startsWith(github.event.comment.body, '<!-- focal-state-command:v1 -->')
+      github.event.issue.number == 5 &&
+      github.event.comment.id == 5099551993 &&
+      startsWith(github.event.comment.body, '<!-- focal-state-command:v2 -->')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -25,7 +26,7 @@ jobs:
         shell: python
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          STATE_ISSUE_NUMBER: "2"
+          STATE_ISSUE_NUMBER: "5"
         run: |
           from __future__ import annotations
 
@@ -38,9 +39,8 @@ jobs:
           from datetime import datetime, timezone
           from typing import Any
 
-          COMMAND_MARKER = "<!-- focal-state-command:v1 -->"
-          RESULT_MARKER = "<!-- focal-state-result:v1 -->"
-          STATE_START = "<!-- focal-state:v1 -->"
+          COMMAND_MARKER = "<!-- focal-state-command:v2 -->"
+          STATE_START = "<!-- focal-state:v2 -->"
           STATE_END = "<!-- /focal-state -->"
           ALLOWED_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR"}
           ALLOWED_OPERATIONS = {"acquire", "recover", "heartbeat", "release", "inspect"}
@@ -79,22 +79,11 @@ jobs:
                   raise RuntimeError(f"GitHub API {method} {path} failed: {exc.code} {details}") from exc
               return json.loads(raw) if raw else None
 
-          def post_result(*, accepted: bool, reason: str, state: dict[str, Any] | None = None) -> None:
-              result = {
-                  "schemaVersion": 1,
-                  "commandId": command_id,
-                  "accepted": accepted,
-                  "reason": reason,
-                  "stateVersion": None if state is None else state.get("version"),
-                  "status": None if state is None else state.get("status"),
-                  "runId": None if state is None else state.get("runId"),
-                  "leaseExpiresAt": None if state is None else state.get("leaseExpiresAt"),
-              }
-              api(
-                  "POST",
-                  f"/repos/{repository}/issues/{issue_number}/comments",
-                  {"body": f"{RESULT_MARKER}\n```json\n{json.dumps(result, indent=2, sort_keys=True)}\n```"},
-              )
+          def utc_now() -> datetime:
+              return datetime.now(timezone.utc)
+
+          def iso_now() -> str:
+              return utc_now().isoformat().replace("+00:00", "Z")
 
           def parse_timestamp(value: Any) -> datetime | None:
               if not isinstance(value, str) or not value:
@@ -132,16 +121,38 @@ jobs:
               rendered = json.dumps(state, indent=2, sort_keys=False)
               return f"{prefix}{STATE_START}\n```json\n{rendered}\n```\n{STATE_END}{suffix}"
 
+          def load_issue_state() -> tuple[dict[str, Any], str, str]:
+              issue = api("GET", f"/repos/{repository}/issues/{issue_number}")
+              return extract_state(issue.get("body") or "")
+
+          def save_state(prefix: str, suffix: str, state: dict[str, Any]) -> None:
+              updated_body = replace_state(prefix, suffix, state)
+              api("PATCH", f"/repos/{repository}/issues/{issue_number}", {"body": updated_body})
+
+          def record_result(
+              state: dict[str, Any],
+              *,
+              accepted: bool,
+              reason: str,
+              processed_at: str,
+          ) -> None:
+              state["lastCommandId"] = command_id
+              state["lastCommandAccepted"] = accepted
+              state["lastCommandReason"] = reason
+              state["lastCommandProcessedAt"] = processed_at
+              state["version"] = int(state.get("version", 0)) + 1
+
           try:
               if comment.get("author_association") not in ALLOWED_ASSOCIATIONS:
-                  post_result(accepted=False, reason="UNAUTHORIZED_COMMENT_AUTHOR")
-                  raise SystemExit(0)
+                  raise PermissionError("UNAUTHORIZED_COMMENT_AUTHOR")
 
               command = extract_json_after_marker(comment_body)
               command_id = command.get("commandId")
               operation = command.get("operation")
               run_id = command.get("runId")
 
+              if command.get("schemaVersion") != 2:
+                  raise ValueError("schemaVersion 2 is required")
               if not isinstance(command_id, str) or not command_id:
                   raise ValueError("commandId is required")
               if operation not in ALLOWED_OPERATIONS:
@@ -149,15 +160,20 @@ jobs:
               if operation != "inspect" and (not isinstance(run_id, str) or not run_id):
                   raise ValueError("runId is required")
 
-              issue = api("GET", f"/repos/{repository}/issues/{issue_number}")
-              state, prefix, suffix = extract_state(issue["body"])
+              state, prefix, suffix = load_issue_state()
+              if state.get("schemaVersion") != 2:
+                  raise ValueError("state schemaVersion 2 is required")
               if state.get("repository") != repository:
                   raise ValueError("state repository does not match workflow repository")
 
-              now = datetime.now(timezone.utc)
+              if state.get("lastCommandId") == command_id:
+                  print(f"duplicate command already processed: {command_id}")
+                  raise SystemExit(0)
+
+              now = utc_now()
+              processed_at = now.isoformat().replace("+00:00", "Z")
               current_expiry = parse_timestamp(state.get("leaseExpiresAt"))
               lease_active = state.get("status") == "working" and current_expiry is not None and current_expiry > now
-              changed = False
               accepted = False
               reason = ""
 
@@ -192,12 +208,10 @@ jobs:
                               "workBranchHeadSha": command.get("workBranchHeadSha"),
                               "pullRequest": command.get("pullRequest"),
                               "checkpointSha": command.get("checkpointSha"),
-                              "lastCommandId": command_id,
                               "note": command.get("note"),
                           }
                       )
                       accepted = True
-                      changed = True
                       reason = "LEASE_ACQUIRED" if operation == "acquire" else "LEASE_RECOVERED"
 
               elif operation == "heartbeat":
@@ -219,9 +233,7 @@ jobs:
                       ):
                           if key in command:
                               state[key] = command[key]
-                      state["lastCommandId"] = command_id
                       accepted = True
-                      changed = True
                       reason = "HEARTBEAT_ACCEPTED"
 
               elif operation == "release":
@@ -253,26 +265,37 @@ jobs:
                               "lastCompletedAt": command.get("completedAt"),
                               "lastResult": command.get("result"),
                               "lastRunId": previous_run_id,
-                              "lastCommandId": command_id,
                               "note": command.get("note"),
                           }
                       )
                       accepted = True
-                      changed = True
                       reason = "LEASE_RELEASED"
 
-              if changed:
-                  state["version"] = int(state.get("version", 0)) + 1
-                  updated_body = replace_state(prefix, suffix, state)
-                  api("PATCH", f"/repos/{repository}/issues/{issue_number}", {"body": updated_body})
+              record_result(state, accepted=accepted, reason=reason, processed_at=processed_at)
+              save_state(prefix, suffix, state)
+              print(json.dumps({
+                  "accepted": accepted,
+                  "commandId": command_id,
+                  "reason": reason,
+                  "stateVersion": state["version"],
+                  "status": state.get("status"),
+                  "runId": state.get("runId"),
+              }, sort_keys=True))
 
-              post_result(accepted=accepted, reason=reason, state=state)
-              if not accepted:
-                  raise SystemExit(3)
-
+          except SystemExit:
+              raise
           except Exception as exc:
               try:
-                  post_result(accepted=False, reason=f"COMMAND_ERROR: {exc}")
+                  state, prefix, suffix = load_issue_state()
+                  if command_id is None:
+                      command_id = f"invalid-{comment.get('id', 'unknown')}"
+                  record_result(
+                      state,
+                      accepted=False,
+                      reason=f"COMMAND_ERROR: {exc}",
+                      processed_at=iso_now(),
+                  )
+                  save_state(prefix, suffix, state)
               except Exception as reporting_exc:
-                  print(f"failed to report command error: {reporting_exc}", file=sys.stderr)
+                  print(f"failed to record command error: {reporting_exc}", file=sys.stderr)
               raise
