@@ -88,7 +88,7 @@ class RuntimeGuardTests(unittest.TestCase):
         self.assertFalse(result.hard_kill_triggered)
 
     @unittest.skipUnless(hasattr(signal, "SIGTERM"), "requires POSIX signals")
-    def test_hard_limit_escalates_when_sigterm_is_ignored(self) -> None:
+    def test_blocked_cleanup_escalates_and_preserves_phase(self) -> None:
         command = (
             "import signal,time; "
             "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
@@ -105,6 +105,9 @@ class RuntimeGuardTests(unittest.TestCase):
         self.assertTrue(result.soft_stop_triggered)
         self.assertTrue(result.hard_kill_triggered)
         self.assertEqual(result.signal_sent, "SIGKILL_HARD_LIMIT")
+        self.assertEqual(result.final_phase, "CLEANUP")
+        self.assertIsNotNone(result.exit_code)
+        self.assertLess(result.exit_code, 0)
         self.assertLess(result.elapsed_seconds, 1.5)
 
     @unittest.skipUnless(hasattr(os, "killpg") and pathlib.Path("/proc").is_dir(), "requires Linux process groups")
