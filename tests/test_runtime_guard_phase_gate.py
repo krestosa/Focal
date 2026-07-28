@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
 import unittest
 from unittest import mock
@@ -37,6 +39,67 @@ class RuntimeGuardPhaseGateTests(unittest.TestCase):
         self.assertFalse(result.hard_kill_triggered)
         self.assertEqual(result.final_phase, "CLEANUP")
         self.assertIsNone(result.signal_sent)
+
+    def test_cli_rejects_functional_phase_after_soft_stop(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tools.runtime_guard",
+                "--limit-seconds",
+                "2",
+                "--soft-stop-seconds",
+                "1",
+                "--phase",
+                "IMPLEMENTATION",
+                "--soft-stop-active",
+                "--",
+                sys.executable,
+                "-c",
+                "raise SystemExit(0)",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(completed.returncode, 2)
+        self.assertEqual(completed.stdout, "")
+        self.assertEqual(
+            json.loads(completed.stderr),
+            {"error": "phase 'IMPLEMENTATION' is not allowed after soft stop"},
+        )
+
+    def test_cli_allows_finalization_phase_after_soft_stop(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tools.runtime_guard",
+                "--limit-seconds",
+                "2",
+                "--soft-stop-seconds",
+                "1",
+                "--phase",
+                "CLEANUP",
+                "--soft-stop-active",
+                "--",
+                sys.executable,
+                "-c",
+                "raise SystemExit(0)",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertTrue(payload["soft_stop_triggered"])
+        self.assertFalse(payload["hard_kill_triggered"])
+        self.assertEqual(payload["final_phase"], "CLEANUP")
+        self.assertEqual(payload["exit_code"], 0)
+        self.assertIsNone(payload["signal_sent"])
 
 
 if __name__ == "__main__":
