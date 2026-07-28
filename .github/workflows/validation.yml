@@ -72,4 +72,4 @@ jobs:
       - name: Run runtime guard unit tests
         env:
           PYTHONPATH: .
-        run: python -m unittest -v tests/test_runtime_guard.py
+        run: python -m unittest discover -v tests
