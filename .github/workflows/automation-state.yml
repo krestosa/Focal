@@ -1,7 +1,7 @@
 name: Automation State Coordinator
 
 on:
-  issue_comment:
+  issues:
     types:
       - edited
 
@@ -15,10 +15,7 @@ concurrency:
 
 jobs:
   coordinate:
-    if: >-
-      github.event.issue.number == 5 &&
-      github.event.comment.id == 5099551993 &&
-      startsWith(github.event.comment.body, '<!-- focal-state-command:v2 -->')
+    if: github.event.issue.number == 7
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -26,7 +23,7 @@ jobs:
         shell: python
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          STATE_ISSUE_NUMBER: "5"
+          STATE_ISSUE_NUMBER: "7"
         run: |
           from __future__ import annotations
 
@@ -39,10 +36,10 @@ jobs:
           from datetime import datetime, timezone
           from typing import Any
 
-          COMMAND_MARKER = "<!-- focal-state-command:v2 -->"
-          STATE_START = "<!-- focal-state:v2 -->"
+          COMMAND_START = "<!-- focal-command:v3 -->"
+          COMMAND_END = "<!-- /focal-command -->"
+          STATE_START = "<!-- focal-state:v3 -->"
           STATE_END = "<!-- /focal-state -->"
-          ALLOWED_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR"}
           ALLOWED_OPERATIONS = {"acquire", "recover", "heartbeat", "release", "inspect"}
 
           repository = os.environ["GITHUB_REPOSITORY"]
@@ -52,9 +49,11 @@ jobs:
           with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
               event = json.load(event_file)
 
-          comment = event["comment"]
-          comment_body = comment["body"]
-          command_id: str | None = None
+          sender = (event.get("sender") or {}).get("login")
+          repository_owner = repository.split("/", 1)[0]
+          if sender not in {repository_owner, "github-actions[bot]"}:
+              print(f"ignoring edit from unauthorized sender: {sender}")
+              raise SystemExit(0)
 
           def api(method: str, path: str, payload: dict[str, Any] | None = None) -> Any:
               data = None
@@ -79,11 +78,11 @@ jobs:
                   raise RuntimeError(f"GitHub API {method} {path} failed: {exc.code} {details}") from exc
               return json.loads(raw) if raw else None
 
-          def utc_now() -> datetime:
+          def now_utc() -> datetime:
               return datetime.now(timezone.utc)
 
-          def iso_now() -> str:
-              return utc_now().isoformat().replace("+00:00", "Z")
+          def now_iso() -> str:
+              return now_utc().isoformat().replace("+00:00", "Z")
 
           def parse_timestamp(value: Any) -> datetime | None:
               if not isinstance(value, str) or not value:
@@ -94,96 +93,69 @@ jobs:
                   raise ValueError(f"timestamp lacks timezone: {value}")
               return parsed.astimezone(timezone.utc)
 
-          def extract_json_after_marker(body: str) -> dict[str, Any]:
-              raw = body[len(COMMAND_MARKER):].strip()
-              fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", raw, flags=re.DOTALL)
-              if fenced:
-                  raw = fenced.group(1)
-              value = json.loads(raw)
-              if not isinstance(value, dict):
-                  raise ValueError("command payload must be a JSON object")
-              return value
-
-          def extract_state(body: str) -> tuple[dict[str, Any], str, str]:
+          def extract_block(body: str, start: str, end: str) -> tuple[dict[str, Any], int, int]:
               pattern = re.compile(
-                  re.escape(STATE_START) + r"\s*```json\s*(.*?)\s*```\s*" + re.escape(STATE_END),
+                  re.escape(start) + r"\s*```json\s*(.*?)\s*```\s*" + re.escape(end),
                   flags=re.DOTALL,
               )
               match = pattern.search(body)
               if not match:
-                  raise ValueError("state block is missing or malformed")
-              state = json.loads(match.group(1))
-              if not isinstance(state, dict):
-                  raise ValueError("state must be a JSON object")
-              return state, body[: match.start()], body[match.end() :]
+                  raise ValueError(f"missing or malformed block: {start}")
+              value = json.loads(match.group(1))
+              if not isinstance(value, dict):
+                  raise ValueError(f"block must contain a JSON object: {start}")
+              return value, match.start(), match.end()
 
-          def replace_state(prefix: str, suffix: str, state: dict[str, Any]) -> str:
+          def replace_state(body: str, state: dict[str, Any]) -> str:
+              _, start, end = extract_block(body, STATE_START, STATE_END)
               rendered = json.dumps(state, indent=2, sort_keys=False)
-              return f"{prefix}{STATE_START}\n```json\n{rendered}\n```\n{STATE_END}{suffix}"
+              replacement = f"{STATE_START}\n```json\n{rendered}\n```\n{STATE_END}"
+              return body[:start] + replacement + body[end:]
 
-          def load_issue_state() -> tuple[dict[str, Any], str, str]:
-              issue = api("GET", f"/repos/{repository}/issues/{issue_number}")
-              return extract_state(issue.get("body") or "")
+          issue = api("GET", f"/repos/{repository}/issues/{issue_number}")
+          body = issue.get("body") or ""
+          command, _, _ = extract_block(body, COMMAND_START, COMMAND_END)
+          state, _, _ = extract_block(body, STATE_START, STATE_END)
 
-          def save_state(prefix: str, suffix: str, state: dict[str, Any]) -> None:
-              updated_body = replace_state(prefix, suffix, state)
-              api("PATCH", f"/repos/{repository}/issues/{issue_number}", {"body": updated_body})
+          command_id = command.get("commandId")
+          operation = command.get("operation")
+          run_id = command.get("runId")
 
-          def record_result(
-              state: dict[str, Any],
-              *,
-              accepted: bool,
-              reason: str,
-              processed_at: str,
-          ) -> None:
-              state["lastCommandId"] = command_id
-              state["lastCommandAccepted"] = accepted
-              state["lastCommandReason"] = reason
-              state["lastCommandProcessedAt"] = processed_at
-              state["version"] = int(state.get("version", 0)) + 1
+          if command.get("schemaVersion") != 3:
+              raise ValueError("command schemaVersion 3 is required")
+          if state.get("schemaVersion") != 3:
+              raise ValueError("state schemaVersion 3 is required")
+          if state.get("repository") != repository:
+              raise ValueError("state repository does not match workflow repository")
+          if not isinstance(command_id, str) or not command_id:
+              raise ValueError("commandId is required")
+          if operation not in ALLOWED_OPERATIONS:
+              raise ValueError(f"unsupported operation: {operation}")
+          if operation != "inspect" and (not isinstance(run_id, str) or not run_id):
+              raise ValueError("runId is required")
+
+          if state.get("lastCommandId") == command_id:
+              print(f"command already processed: {command_id}")
+              raise SystemExit(0)
+
+          processed_at = now_iso()
+          current_expiry = parse_timestamp(state.get("leaseExpiresAt"))
+          lease_active = (
+              state.get("status") == "working"
+              and current_expiry is not None
+              and current_expiry > now_utc()
+          )
+          accepted = False
+          reason = ""
 
           try:
-              if comment.get("author_association") not in ALLOWED_ASSOCIATIONS:
-                  raise PermissionError("UNAUTHORIZED_COMMENT_AUTHOR")
-
-              command = extract_json_after_marker(comment_body)
-              command_id = command.get("commandId")
-              operation = command.get("operation")
-              run_id = command.get("runId")
-
-              if command.get("schemaVersion") != 2:
-                  raise ValueError("schemaVersion 2 is required")
-              if not isinstance(command_id, str) or not command_id:
-                  raise ValueError("commandId is required")
-              if operation not in ALLOWED_OPERATIONS:
-                  raise ValueError(f"unsupported operation: {operation}")
-              if operation != "inspect" and (not isinstance(run_id, str) or not run_id):
-                  raise ValueError("runId is required")
-
-              state, prefix, suffix = load_issue_state()
-              if state.get("schemaVersion") != 2:
-                  raise ValueError("state schemaVersion 2 is required")
-              if state.get("repository") != repository:
-                  raise ValueError("state repository does not match workflow repository")
-
-              if state.get("lastCommandId") == command_id:
-                  print(f"duplicate command already processed: {command_id}")
-                  raise SystemExit(0)
-
-              now = utc_now()
-              processed_at = now.isoformat().replace("+00:00", "Z")
-              current_expiry = parse_timestamp(state.get("leaseExpiresAt"))
-              lease_active = state.get("status") == "working" and current_expiry is not None and current_expiry > now
-              accepted = False
-              reason = ""
-
               if operation == "inspect":
                   accepted = True
                   reason = "STATE_OBSERVED"
 
               elif operation in {"acquire", "recover"}:
                   requested_expiry = parse_timestamp(command.get("leaseExpiresAt"))
-                  if requested_expiry is None or requested_expiry <= now:
+                  if requested_expiry is None or requested_expiry <= now_utc():
                       raise ValueError("leaseExpiresAt must be in the future")
                   if lease_active and state.get("runId") != run_id:
                       reason = "ACTIVE_LEASE"
@@ -218,7 +190,7 @@ jobs:
                   requested_expiry = parse_timestamp(command.get("leaseExpiresAt"))
                   if state.get("status") != "working" or state.get("runId") != run_id:
                       reason = "NOT_LEASE_OWNER"
-                  elif requested_expiry is None or requested_expiry <= now:
+                  elif requested_expiry is None or requested_expiry <= now_utc():
                       raise ValueError("leaseExpiresAt must be in the future")
                   else:
                       for key in (
@@ -271,31 +243,32 @@ jobs:
                       accepted = True
                       reason = "LEASE_RELEASED"
 
-              record_result(state, accepted=accepted, reason=reason, processed_at=processed_at)
-              save_state(prefix, suffix, state)
-              print(json.dumps({
-                  "accepted": accepted,
-                  "commandId": command_id,
-                  "reason": reason,
-                  "stateVersion": state["version"],
-                  "status": state.get("status"),
-                  "runId": state.get("runId"),
-              }, sort_keys=True))
-
-          except SystemExit:
-              raise
           except Exception as exc:
-              try:
-                  state, prefix, suffix = load_issue_state()
-                  if command_id is None:
-                      command_id = f"invalid-{comment.get('id', 'unknown')}"
-                  record_result(
-                      state,
-                      accepted=False,
-                      reason=f"COMMAND_ERROR: {exc}",
-                      processed_at=iso_now(),
-                  )
-                  save_state(prefix, suffix, state)
-              except Exception as reporting_exc:
-                  print(f"failed to record command error: {reporting_exc}", file=sys.stderr)
-              raise
+              accepted = False
+              reason = f"COMMAND_ERROR: {exc}"
+
+          state["lastCommandId"] = command_id
+          state["lastCommandAccepted"] = accepted
+          state["lastCommandReason"] = reason
+          state["lastCommandProcessedAt"] = processed_at
+          state["version"] = int(state.get("version", 0)) + 1
+
+          updated_body = replace_state(body, state)
+          api("PATCH", f"/repos/{repository}/issues/{issue_number}", {"body": updated_body})
+
+          print(
+              json.dumps(
+                  {
+                      "accepted": accepted,
+                      "commandId": command_id,
+                      "reason": reason,
+                      "stateVersion": state["version"],
+                      "status": state.get("status"),
+                      "runId": state.get("runId"),
+                  },
+                  sort_keys=True,
+              )
+          )
+
+          if not accepted:
+              raise SystemExit(3)
