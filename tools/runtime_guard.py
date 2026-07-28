@@ -139,7 +139,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit-seconds", type=_positive_seconds, default=3510.0)
     parser.add_argument("--soft-stop-seconds", type=_positive_seconds, default=3000.0)
     parser.add_argument("--grace-seconds", type=_positive_seconds, default=8.0)
-    parser.add_argument("--phase", choices=sorted(_PHASES), default="IMPLEMENTATION")
+    parser.add_argument("--phase", default="IMPLEMENTATION")
     parser.add_argument("--soft-stop-active", action="store_true")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     return parser
