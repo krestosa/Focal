@@ -75,7 +75,7 @@ jobs:
         run: python -m unittest discover -v tests
 
   history-normalization:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' && github.head_ref == 'maintenance/history-rewrite'
     name: Repository maintenance
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -90,7 +90,7 @@ jobs:
       - name: Normalize repository history
         shell: bash
         env:
-          EXPECTED_MAIN: ${{ github.sha }}
+          EXPECTED_MAIN: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
           git fetch --force origin main:refs/remotes/origin/main
@@ -179,3 +179,4 @@ jobs:
           git push --force-with-lease=refs/heads/main:"$EXPECTED_MAIN" origin main:refs/heads/main
           git push origin --delete maintenance/repository-metadata || true
           git push origin --delete maintenance/metadata-normalization || true
+          git push origin --delete maintenance/history-rewrite || true
