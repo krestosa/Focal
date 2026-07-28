@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import json
 import os
 import pathlib
 import signal
+import subprocess
 import sys
 import tempfile
 import time
@@ -106,6 +108,39 @@ class RuntimeGuardTests(unittest.TestCase):
                 fields = child_state.read_text(encoding="utf-8").split()
                 self.assertGreater(len(fields), 2)
                 self.assertEqual(fields[2], "Z")
+
+    def test_cli_emits_structured_result_with_final_phase(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tools.runtime_guard",
+                "--limit-seconds",
+                "2",
+                "--soft-stop-seconds",
+                "1",
+                "--grace-seconds",
+                "0.2",
+                "--phase",
+                "LOCAL_VALIDATION",
+                "--",
+                sys.executable,
+                "-c",
+                "raise SystemExit(0)",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        payload = json.loads(completed.stdout)
+        self.assertEqual(payload["final_phase"], "LOCAL_VALIDATION")
+        self.assertEqual(payload["exit_code"], 0)
+        self.assertFalse(payload["soft_stop_triggered"])
+        self.assertFalse(payload["hard_kill_triggered"])
+        self.assertIsNone(payload["signal_sent"])
+        self.assertEqual(payload["command"][-2:], ["-c", "raise SystemExit(0)"])
 
     def test_rejects_empty_command(self) -> None:
         with self.assertRaisesRegex(ValueError, "command must not be empty"):
