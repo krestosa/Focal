@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import os
+import pathlib
 import signal
 import sys
+import tempfile
+import time
 import unittest
 
 from tools.runtime_guard import supervise
@@ -69,6 +73,39 @@ class RuntimeGuardTests(unittest.TestCase):
         self.assertTrue(result.hard_kill_triggered)
         self.assertEqual(result.signal_sent, "SIGKILL_HARD_LIMIT")
         self.assertLess(result.elapsed_seconds, 1.5)
+
+    @unittest.skipUnless(hasattr(os, "killpg") and pathlib.Path("/proc").is_dir(), "requires Linux process groups")
+    def test_soft_stop_terminates_child_process_group(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            pid_path = pathlib.Path(directory, "child.pid")
+            command = (
+                "import pathlib,subprocess,sys,time; "
+                "child=subprocess.Popen([sys.executable,'-c','import time; time.sleep(5)']); "
+                f"pathlib.Path({str(pid_path)!r}).write_text(str(child.pid), encoding='utf-8'); "
+                "time.sleep(5)"
+            )
+            result = supervise(
+                [sys.executable, "-c", command],
+                limit_seconds=2.0,
+                soft_stop_seconds=0.2,
+                grace_seconds=0.2,
+                phase="IMPLEMENTATION",
+            )
+
+            self.assertTrue(result.soft_stop_triggered)
+            child_pid = int(pid_path.read_text(encoding="utf-8"))
+            child_state = pathlib.Path(f"/proc/{child_pid}/stat")
+            deadline = time.monotonic() + 1.0
+            while child_state.exists() and time.monotonic() < deadline:
+                fields = child_state.read_text(encoding="utf-8").split()
+                if len(fields) > 2 and fields[2] == "Z":
+                    break
+                time.sleep(0.02)
+
+            if child_state.exists():
+                fields = child_state.read_text(encoding="utf-8").split()
+                self.assertGreater(len(fields), 2)
+                self.assertEqual(fields[2], "Z")
 
     def test_rejects_empty_command(self) -> None:
         with self.assertRaisesRegex(ValueError, "command must not be empty"):
