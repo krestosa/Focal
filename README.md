@@ -4,7 +4,7 @@ Focal is an shader pack project targeting Minecraft Java 26.2 through Iris and S
 
 ## Project status
 
-The repository is in the bootstrap phase. Runtime coordination is maintained separately on the permanent `automation/runtime-state` branch; functional development occurs only on reviewed branches and pull requests.
+The repository is in the bootstrap phase. Runtime coordination is maintained outside Git history through issue #7 and the `Automation State Coordinator` workflow; functional development occurs only on reviewed branches and pull requests.
 
 No in-game compatibility, performance, or visual-quality claim is made until the corresponding automated and client-integration evidence exists.
 
