@@ -11,6 +11,29 @@ import time
 from dataclasses import asdict, dataclass
 from typing import Sequence
 
+_PHASES = {
+    "STARTUP",
+    "GOVERNANCE_READ",
+    "REMOTE_INSPECTION",
+    "ACTION_DETECTION",
+    "SLEEP_PASSIVE",
+    "LOCK_ACQUISITION",
+    "RECOVERY",
+    "PLANNING",
+    "IMPLEMENTATION",
+    "LOCAL_VALIDATION",
+    "COMMITTING",
+    "PUBLISHING",
+    "PR_FINALIZATION",
+    "CI_WAIT",
+    "MERGING",
+    "POST_MERGE",
+    "CHECKPOINT_ONLY",
+    "CLEANUP",
+    "LOCK_RELEASE",
+    "TERMINATED",
+}
+
 _ALLOWED_AFTER_SOFT_STOP = {
     "COMMITTING",
     "PUBLISHING",
@@ -60,6 +83,8 @@ def supervise(
         raise ValueError("command must not be empty")
     if soft_stop_seconds >= limit_seconds:
         raise ValueError("soft stop must occur before the hard limit")
+    if phase not in _PHASES:
+        raise ValueError(f"unknown phase {phase!r}")
     if soft_stop_active and phase not in _ALLOWED_AFTER_SOFT_STOP:
         raise ValueError(f"phase {phase!r} is not allowed after soft stop")
 
@@ -114,7 +139,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit-seconds", type=_positive_seconds, default=3510.0)
     parser.add_argument("--soft-stop-seconds", type=_positive_seconds, default=3000.0)
     parser.add_argument("--grace-seconds", type=_positive_seconds, default=8.0)
-    parser.add_argument("--phase", default="IMPLEMENTATION")
+    parser.add_argument("--phase", choices=sorted(_PHASES), default="IMPLEMENTATION")
     parser.add_argument("--soft-stop-active", action="store_true")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     return parser
