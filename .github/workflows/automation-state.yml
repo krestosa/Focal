@@ -1,0 +1,278 @@
+name: Automation State Coordinator
+
+on:
+  issue_comment:
+    types:
+      - created
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: focal-automation-state
+  cancel-in-progress: false
+
+jobs:
+  coordinate:
+    if: >-
+      github.event.issue.number == 2 &&
+      startsWith(github.event.comment.body, '<!-- focal-state-command:v1 -->')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate and apply state command
+        shell: python
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STATE_ISSUE_NUMBER: "2"
+        run: |
+          from __future__ import annotations
+
+          import json
+          import os
+          import re
+          import sys
+          import urllib.error
+          import urllib.request
+          from datetime import datetime, timezone
+          from typing import Any
+
+          COMMAND_MARKER = "<!-- focal-state-command:v1 -->"
+          RESULT_MARKER = "<!-- focal-state-result:v1 -->"
+          STATE_START = "<!-- focal-state:v1 -->"
+          STATE_END = "<!-- /focal-state -->"
+          ALLOWED_ASSOCIATIONS = {"OWNER", "MEMBER", "COLLABORATOR"}
+          ALLOWED_OPERATIONS = {"acquire", "recover", "heartbeat", "release", "inspect"}
+
+          repository = os.environ["GITHUB_REPOSITORY"]
+          token = os.environ["GITHUB_TOKEN"]
+          issue_number = int(os.environ["STATE_ISSUE_NUMBER"])
+
+          with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
+              event = json.load(event_file)
+
+          comment = event["comment"]
+          comment_body = comment["body"]
+          command_id: str | None = None
+
+          def api(method: str, path: str, payload: dict[str, Any] | None = None) -> Any:
+              data = None
+              if payload is not None:
+                  data = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+              request = urllib.request.Request(
+                  f"https://api.github.com{path}",
+                  data=data,
+                  method=method,
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": f"Bearer {token}",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "focal-automation-state",
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      raw = response.read()
+              except urllib.error.HTTPError as exc:
+                  details = exc.read().decode("utf-8", errors="replace")
+                  raise RuntimeError(f"GitHub API {method} {path} failed: {exc.code} {details}") from exc
+              return json.loads(raw) if raw else None
+
+          def post_result(*, accepted: bool, reason: str, state: dict[str, Any] | None = None) -> None:
+              result = {
+                  "schemaVersion": 1,
+                  "commandId": command_id,
+                  "accepted": accepted,
+                  "reason": reason,
+                  "stateVersion": None if state is None else state.get("version"),
+                  "status": None if state is None else state.get("status"),
+                  "runId": None if state is None else state.get("runId"),
+                  "leaseExpiresAt": None if state is None else state.get("leaseExpiresAt"),
+              }
+              api(
+                  "POST",
+                  f"/repos/{repository}/issues/{issue_number}/comments",
+                  {"body": f"{RESULT_MARKER}\n```json\n{json.dumps(result, indent=2, sort_keys=True)}\n```"},
+              )
+
+          def parse_timestamp(value: Any) -> datetime | None:
+              if not isinstance(value, str) or not value:
+                  return None
+              normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+              parsed = datetime.fromisoformat(normalized)
+              if parsed.tzinfo is None:
+                  raise ValueError(f"timestamp lacks timezone: {value}")
+              return parsed.astimezone(timezone.utc)
+
+          def extract_json_after_marker(body: str) -> dict[str, Any]:
+              raw = body[len(COMMAND_MARKER):].strip()
+              fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", raw, flags=re.DOTALL)
+              if fenced:
+                  raw = fenced.group(1)
+              value = json.loads(raw)
+              if not isinstance(value, dict):
+                  raise ValueError("command payload must be a JSON object")
+              return value
+
+          def extract_state(body: str) -> tuple[dict[str, Any], str, str]:
+              pattern = re.compile(
+                  re.escape(STATE_START) + r"\s*```json\s*(.*?)\s*```\s*" + re.escape(STATE_END),
+                  flags=re.DOTALL,
+              )
+              match = pattern.search(body)
+              if not match:
+                  raise ValueError("state block is missing or malformed")
+              state = json.loads(match.group(1))
+              if not isinstance(state, dict):
+                  raise ValueError("state must be a JSON object")
+              return state, body[: match.start()], body[match.end() :]
+
+          def replace_state(prefix: str, suffix: str, state: dict[str, Any]) -> str:
+              rendered = json.dumps(state, indent=2, sort_keys=False)
+              return f"{prefix}{STATE_START}\n```json\n{rendered}\n```\n{STATE_END}{suffix}"
+
+          try:
+              if comment.get("author_association") not in ALLOWED_ASSOCIATIONS:
+                  post_result(accepted=False, reason="UNAUTHORIZED_COMMENT_AUTHOR")
+                  raise SystemExit(0)
+
+              command = extract_json_after_marker(comment_body)
+              command_id = command.get("commandId")
+              operation = command.get("operation")
+              run_id = command.get("runId")
+
+              if not isinstance(command_id, str) or not command_id:
+                  raise ValueError("commandId is required")
+              if operation not in ALLOWED_OPERATIONS:
+                  raise ValueError(f"unsupported operation: {operation}")
+              if operation != "inspect" and (not isinstance(run_id, str) or not run_id):
+                  raise ValueError("runId is required")
+
+              issue = api("GET", f"/repos/{repository}/issues/{issue_number}")
+              state, prefix, suffix = extract_state(issue["body"])
+              if state.get("repository") != repository:
+                  raise ValueError("state repository does not match workflow repository")
+
+              now = datetime.now(timezone.utc)
+              current_expiry = parse_timestamp(state.get("leaseExpiresAt"))
+              lease_active = state.get("status") == "working" and current_expiry is not None and current_expiry > now
+              changed = False
+              accepted = False
+              reason = ""
+
+              if operation == "inspect":
+                  accepted = True
+                  reason = "STATE_OBSERVED"
+
+              elif operation in {"acquire", "recover"}:
+                  requested_expiry = parse_timestamp(command.get("leaseExpiresAt"))
+                  if requested_expiry is None or requested_expiry <= now:
+                      raise ValueError("leaseExpiresAt must be in the future")
+                  if lease_active and state.get("runId") != run_id:
+                      reason = "ACTIVE_LEASE"
+                  else:
+                      state.update(
+                          {
+                              "status": "working",
+                              "mode": "recovery" if operation == "recover" else command.get("mode", "normal"),
+                              "phase": command.get("phase", "LOCK_ACQUISITION"),
+                              "runId": run_id,
+                              "owner": command.get("owner"),
+                              "executionSource": command.get("executionSource"),
+                              "startedAt": command.get("startedAt"),
+                              "heartbeatAt": command.get("heartbeatAt", command.get("startedAt")),
+                              "leaseExpiresAt": command.get("leaseExpiresAt"),
+                              "softStopAt": command.get("softStopAt"),
+                              "cleanupAt": command.get("cleanupAt"),
+                              "hardKillAt": command.get("hardKillAt"),
+                              "deadlineAt": command.get("deadlineAt"),
+                              "baseMainSha": command.get("baseMainSha"),
+                              "workBranch": command.get("workBranch"),
+                              "workBranchHeadSha": command.get("workBranchHeadSha"),
+                              "pullRequest": command.get("pullRequest"),
+                              "checkpointSha": command.get("checkpointSha"),
+                              "lastCommandId": command_id,
+                              "note": command.get("note"),
+                          }
+                      )
+                      accepted = True
+                      changed = True
+                      reason = "LEASE_ACQUIRED" if operation == "acquire" else "LEASE_RECOVERED"
+
+              elif operation == "heartbeat":
+                  requested_expiry = parse_timestamp(command.get("leaseExpiresAt"))
+                  if state.get("status") != "working" or state.get("runId") != run_id:
+                      reason = "NOT_LEASE_OWNER"
+                  elif requested_expiry is None or requested_expiry <= now:
+                      raise ValueError("leaseExpiresAt must be in the future")
+                  else:
+                      for key in (
+                          "phase",
+                          "heartbeatAt",
+                          "leaseExpiresAt",
+                          "workBranch",
+                          "workBranchHeadSha",
+                          "pullRequest",
+                          "checkpointSha",
+                          "note",
+                      ):
+                          if key in command:
+                              state[key] = command[key]
+                      state["lastCommandId"] = command_id
+                      accepted = True
+                      changed = True
+                      reason = "HEARTBEAT_ACCEPTED"
+
+              elif operation == "release":
+                  if state.get("status") != "working" or state.get("runId") != run_id:
+                      reason = "NOT_LEASE_OWNER"
+                  else:
+                      previous_run_id = state.get("runId")
+                      checkpoint = command.get("checkpointSha", state.get("checkpointSha"))
+                      state.update(
+                          {
+                              "status": "idle",
+                              "mode": "normal",
+                              "phase": "idle",
+                              "runId": None,
+                              "owner": None,
+                              "executionSource": None,
+                              "startedAt": None,
+                              "heartbeatAt": None,
+                              "leaseExpiresAt": None,
+                              "softStopAt": None,
+                              "cleanupAt": None,
+                              "hardKillAt": None,
+                              "deadlineAt": None,
+                              "baseMainSha": None,
+                              "workBranch": None,
+                              "workBranchHeadSha": None,
+                              "pullRequest": None,
+                              "checkpointSha": checkpoint,
+                              "lastCompletedAt": command.get("completedAt"),
+                              "lastResult": command.get("result"),
+                              "lastRunId": previous_run_id,
+                              "lastCommandId": command_id,
+                              "note": command.get("note"),
+                          }
+                      )
+                      accepted = True
+                      changed = True
+                      reason = "LEASE_RELEASED"
+
+              if changed:
+                  state["version"] = int(state.get("version", 0)) + 1
+                  updated_body = replace_state(prefix, suffix, state)
+                  api("PATCH", f"/repos/{repository}/issues/{issue_number}", {"body": updated_body})
+
+              post_result(accepted=accepted, reason=reason, state=state)
+              if not accepted:
+                  raise SystemExit(3)
+
+          except Exception as exc:
+              try:
+                  post_result(accepted=False, reason=f"COMMAND_ERROR: {exc}")
+              except Exception as reporting_exc:
+                  print(f"failed to report command error: {reporting_exc}", file=sys.stderr)
+              raise
