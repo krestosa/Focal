@@ -6,10 +6,14 @@ import sys
 import unittest
 from unittest import mock
 
-from tools.runtime_guard import supervise
+from tools.runtime_guard import _ALLOWED_AFTER_SOFT_STOP, _PHASES, supervise
 
 
 class RuntimeGuardPhaseGateTests(unittest.TestCase):
+    def test_soft_stop_allowed_phases_are_canonical(self) -> None:
+        self.assertTrue(_ALLOWED_AFTER_SOFT_STOP)
+        self.assertLess(_ALLOWED_AFTER_SOFT_STOP, _PHASES)
+
     def test_rejects_unknown_phase_without_launching(self) -> None:
         with mock.patch("tools.runtime_guard.subprocess.Popen") as popen:
             with self.assertRaisesRegex(ValueError, "unknown phase 'IMPLEMENATION'"):
