@@ -91,6 +91,7 @@ def supervise(
     started = time.monotonic()
     process = subprocess.Popen(list(command), start_new_session=True)
     soft_triggered = soft_stop_active
+    soft_stop_termination_at: float | None = None
     hard_triggered = False
     sent: str | None = None
 
@@ -101,6 +102,7 @@ def supervise(
                 soft_triggered = True
                 if phase not in _ALLOWED_AFTER_SOFT_STOP:
                     _terminate_group(process.pid, signal.SIGTERM)
+                    soft_stop_termination_at = elapsed
                     sent = "SIGTERM_SOFT_STOP"
             if elapsed >= limit_seconds:
                 hard_triggered = True
@@ -111,6 +113,14 @@ def supervise(
                 except subprocess.TimeoutExpired:
                     _terminate_group(process.pid, signal.SIGKILL)
                     sent = "SIGKILL_HARD_LIMIT"
+                break
+            if (
+                soft_stop_termination_at is not None
+                and elapsed - soft_stop_termination_at >= grace_seconds
+            ):
+                _terminate_group(process.pid, signal.SIGKILL)
+                sent = "SIGKILL_SOFT_STOP"
+                process.wait()
                 break
             time.sleep(min(0.1, max(0.01, limit_seconds - elapsed)))
     finally:
