@@ -1,0 +1,31 @@
+name: Repository Maintenance
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: focal-readme-normalization
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    if: github.head_ref == 'maintenance/readme-normalization'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out maintenance runner
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Normalize repository history
+        env:
+          EXPECTED_MAIN: ${{ github.event.pull_request.base.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: python .github/readme_normalization.py
