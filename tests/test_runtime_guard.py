@@ -57,6 +57,21 @@ class RuntimeGuardTests(unittest.TestCase):
         self.assertFalse(result.hard_kill_triggered)
         self.assertIsNone(result.signal_sent)
 
+    def test_failed_cleanup_preserves_exit_code_and_phase(self) -> None:
+        result = supervise(
+            [sys.executable, "-c", "raise SystemExit(7)"],
+            limit_seconds=2.0,
+            soft_stop_seconds=1.0,
+            grace_seconds=0.2,
+            phase="CLEANUP",
+        )
+
+        self.assertEqual(result.exit_code, 7)
+        self.assertEqual(result.final_phase, "CLEANUP")
+        self.assertFalse(result.soft_stop_triggered)
+        self.assertFalse(result.hard_kill_triggered)
+        self.assertIsNone(result.signal_sent)
+
     def test_supervisor_does_not_consult_wall_clock(self) -> None:
         with mock.patch("tools.runtime_guard.time.time", side_effect=AssertionError("wall clock consulted")):
             result = supervise(
