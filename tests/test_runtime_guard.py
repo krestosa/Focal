@@ -9,6 +9,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 from tools.runtime_guard import supervise
 
@@ -55,6 +56,21 @@ class RuntimeGuardTests(unittest.TestCase):
         self.assertTrue(result.soft_stop_triggered)
         self.assertFalse(result.hard_kill_triggered)
         self.assertIsNone(result.signal_sent)
+
+    def test_supervisor_does_not_consult_wall_clock(self) -> None:
+        with mock.patch("tools.runtime_guard.time.time", side_effect=AssertionError("wall clock consulted")):
+            result = supervise(
+                [sys.executable, "-c", "raise SystemExit(0)"],
+                limit_seconds=2.0,
+                soft_stop_seconds=1.0,
+                grace_seconds=0.2,
+                phase="LOCAL_VALIDATION",
+            )
+
+        self.assertEqual(result.exit_code, 0)
+        self.assertGreaterEqual(result.elapsed_seconds, 0.0)
+        self.assertFalse(result.soft_stop_triggered)
+        self.assertFalse(result.hard_kill_triggered)
 
     @unittest.skipUnless(hasattr(signal, "SIGTERM"), "requires POSIX signals")
     def test_hard_limit_escalates_when_sigterm_is_ignored(self) -> None:
