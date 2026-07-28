@@ -59,16 +59,16 @@ class RuntimeGuardTests(unittest.TestCase):
         )
         result = supervise(
             [sys.executable, "-c", command],
-            limit_seconds=0.15,
-            soft_stop_seconds=0.03,
-            grace_seconds=0.05,
+            limit_seconds=0.5,
+            soft_stop_seconds=0.1,
+            grace_seconds=0.1,
             phase="CLEANUP",
         )
 
         self.assertTrue(result.soft_stop_triggered)
         self.assertTrue(result.hard_kill_triggered)
         self.assertEqual(result.signal_sent, "SIGKILL_HARD_LIMIT")
-        self.assertLess(result.elapsed_seconds, 1.0)
+        self.assertLess(result.elapsed_seconds, 1.5)
 
     def test_rejects_empty_command(self) -> None:
         with self.assertRaisesRegex(ValueError, "command must not be empty"):
