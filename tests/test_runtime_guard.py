@@ -142,6 +142,50 @@ class RuntimeGuardTests(unittest.TestCase):
         self.assertIsNone(payload["signal_sent"])
         self.assertEqual(payload["command"][-2:], ["-c", "raise SystemExit(0)"])
 
+    def test_cli_emits_structured_error_for_missing_command(self) -> None:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tools.runtime_guard",
+                "--limit-seconds",
+                "2",
+                "--soft-stop-seconds",
+                "1",
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(completed.returncode, 2)
+        self.assertEqual(completed.stdout, "")
+        self.assertEqual(json.loads(completed.stderr), {"error": "command must not be empty"})
+
+    def test_cli_emits_structured_error_for_launch_failure(self) -> None:
+        missing_command = f"focal-command-that-does-not-exist-{os.getpid()}"
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "tools.runtime_guard",
+                "--limit-seconds",
+                "2",
+                "--soft-stop-seconds",
+                "1",
+                "--",
+                missing_command,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(completed.returncode, 2)
+        self.assertEqual(completed.stdout, "")
+        payload = json.loads(completed.stderr)
+        self.assertIn(missing_command, payload["error"])
+
     def test_rejects_empty_command(self) -> None:
         with self.assertRaisesRegex(ValueError, "command must not be empty"):
             supervise([], 2.0, 1.0, 0.2, "IMPLEMENTATION")
