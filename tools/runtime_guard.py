@@ -54,15 +54,18 @@ def supervise(
     soft_stop_seconds: float,
     grace_seconds: float,
     phase: str,
+    soft_stop_active: bool = False,
 ) -> GuardResult:
     if not command:
         raise ValueError("command must not be empty")
     if soft_stop_seconds >= limit_seconds:
         raise ValueError("soft stop must occur before the hard limit")
+    if soft_stop_active and phase not in _ALLOWED_AFTER_SOFT_STOP:
+        raise ValueError(f"phase {phase!r} is not allowed after soft stop")
 
     started = time.monotonic()
     process = subprocess.Popen(list(command), start_new_session=True)
-    soft_triggered = False
+    soft_triggered = soft_stop_active
     hard_triggered = False
     sent: str | None = None
 
@@ -112,6 +115,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--soft-stop-seconds", type=_positive_seconds, default=3000.0)
     parser.add_argument("--grace-seconds", type=_positive_seconds, default=8.0)
     parser.add_argument("--phase", default="IMPLEMENTATION")
+    parser.add_argument("--soft-stop-active", action="store_true")
     parser.add_argument("command", nargs=argparse.REMAINDER)
     return parser
 
@@ -128,6 +132,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.soft_stop_seconds,
             args.grace_seconds,
             args.phase,
+            args.soft_stop_active,
         )
     except (ValueError, OSError) as exc:
         print(json.dumps({"error": str(exc)}, sort_keys=True), file=sys.stderr)
