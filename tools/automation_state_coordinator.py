@@ -2,8 +2,9 @@
 """Process commands stored in the canonical Focal automation-state issue.
 
 The trust boundary is GitHub's permission to edit issue #7 plus the command/state
-schema and lease invariants. The coordinator intentionally does not hard-code
-actor login names so installed GitHub Apps can issue commands.
+schema and lease invariants. Operational state stores only opaque command and run
+identifiers; it must not record the client, model, provider, application, or actor
+that submitted a command.
 """
 
 from __future__ import annotations
@@ -36,6 +37,19 @@ ALLOWED_OPERATIONS = {
     "cleanup_branches",
 }
 
+# These fields are unnecessary for lease ownership and can expose the execution
+# client. Reject them in commands and remove legacy copies from state.
+FORBIDDEN_PROVENANCE_FIELDS = {
+    "owner",
+    "executionSource",
+    "client",
+    "provider",
+    "model",
+    "agent",
+    "actor",
+    "sender",
+}
+
 
 @dataclass(frozen=True)
 class ProcessResult:
@@ -49,6 +63,14 @@ def now_iso(value: datetime) -> str:
     return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def scrub_provenance(state: dict[str, Any]) -> dict[str, Any]:
+    updated = dict(state)
+    for key in FORBIDDEN_PROVENANCE_FIELDS:
+        updated.pop(key, None)
+    updated.pop("lastAbandonedOwner", None)
+    return updated
+
+
 def validate_contract(
     command: dict[str, Any],
     state: dict[str, Any],
@@ -60,6 +82,12 @@ def validate_contract(
         raise ValueError("state schemaVersion 3 is required")
     if state.get("repository") != repository:
         raise ValueError("state repository does not match workflow repository")
+
+    present_provenance = sorted(FORBIDDEN_PROVENANCE_FIELDS.intersection(command))
+    if present_provenance:
+        raise ValueError(
+            "operational provenance fields are forbidden: " + ", ".join(present_provenance)
+        )
 
     command_id = command.get("commandId")
     operation = command.get("operation")
@@ -82,14 +110,14 @@ def apply_command(
     processed_at: datetime,
     cleanup: Callable[[dict[str, Any], dict[str, Any], str], tuple[bool, str]] | None = None,
 ) -> ProcessResult:
-    """Apply one command while preserving unknown state fields."""
+    """Apply one command while preserving unknown non-provenance state fields."""
 
     validate_contract(command, state, repository)
     command_id = str(command["commandId"])
     if state.get("lastCommandId") == command_id:
-        return ProcessResult(dict(state), True, "ALREADY_PROCESSED", True)
+        return ProcessResult(scrub_provenance(state), True, "ALREADY_PROCESSED", True)
 
-    updated = dict(state)
+    updated = scrub_provenance(state)
     operation = command["operation"]
     run_id = command.get("runId")
     current_expiry = parse_timestamp(updated.get("leaseExpiresAt"))
@@ -124,8 +152,6 @@ def apply_command(
                         "mode": "recovery" if operation == "recover" else command.get("mode", "normal"),
                         "phase": command.get("phase", "LOCK_ACQUISITION"),
                         "runId": run_id,
-                        "owner": command.get("owner"),
-                        "executionSource": command.get("executionSource"),
                         "startedAt": command.get("startedAt"),
                         "heartbeatAt": command.get("heartbeatAt", command.get("startedAt")),
                         "leaseExpiresAt": command.get("leaseExpiresAt"),
@@ -178,8 +204,6 @@ def apply_command(
                         "mode": "normal",
                         "phase": "idle",
                         "runId": None,
-                        "owner": None,
-                        "executionSource": None,
                         "startedAt": None,
                         "heartbeatAt": None,
                         "leaseExpiresAt": None,
@@ -205,6 +229,7 @@ def apply_command(
         accepted = False
         reason = f"COMMAND_ERROR: {exc}"
 
+    updated = scrub_provenance(updated)
     updated["lastCommandId"] = command_id
     updated["lastCommandAccepted"] = accepted
     updated["lastCommandReason"] = reason
@@ -318,14 +343,6 @@ def run(args: argparse.Namespace) -> int:
     if not repository:
         raise RuntimeError("repository is required")
 
-    event_sender = None
-    event_path = os.environ.get("GITHUB_EVENT_PATH")
-    if event_path:
-        with open(event_path, encoding="utf-8") as event_file:
-            event = json.load(event_file)
-        event_sender = ((event.get("sender") or {}).get("login"))
-    print(f"processing issue command submitted by: {event_sender or 'unknown'}")
-
     api = GitHubApi(token)
     issue = api.request("GET", f"/repos/{repository}/issues/{args.issue}")
     body = (issue or {}).get("body") or ""
@@ -340,7 +357,7 @@ def run(args: argparse.Namespace) -> int:
         cleanup=cleanup_branches_handler(api, repository),
     )
     if result.already_processed:
-        print(f"command already processed: {command.get('commandId')}")
+        print("command already processed")
         return 0
 
     updated_body = replace_state(body, result.state)
@@ -349,13 +366,9 @@ def run(args: argparse.Namespace) -> int:
         json.dumps(
             {
                 "accepted": result.accepted,
-                "commandId": command.get("commandId"),
                 "reason": result.reason,
                 "stateVersion": result.state.get("version"),
                 "status": result.state.get("status"),
-                "runId": result.state.get("runId"),
-                "deletedBranches": result.state.get("lastBranchCleanupDeleted"),
-                "skippedBranches": result.state.get("lastBranchCleanupSkipped"),
             },
             sort_keys=True,
         )

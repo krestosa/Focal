@@ -114,6 +114,8 @@ def evaluate(
 
 def repaired_state(state: dict[str, Any], *, repaired_at: datetime) -> dict[str, Any]:
     updated = dict(state)
+    for key in ("owner", "executionSource", "client", "provider", "model", "agent", "actor", "sender", "lastAbandonedOwner"):
+        updated.pop(key, None)
     abandoned_run_id = state.get("runId")
     checkpoint = state.get("checkpointSha") or state.get("workBranchHeadSha")
     repaired_at_text = now_iso(repaired_at)
@@ -124,8 +126,6 @@ def repaired_state(state: dict[str, Any], *, repaired_at: datetime) -> dict[str,
             "mode": "normal",
             "phase": "idle",
             "runId": None,
-            "owner": None,
-            "executionSource": None,
             "startedAt": None,
             "heartbeatAt": None,
             "leaseExpiresAt": None,
@@ -146,7 +146,6 @@ def repaired_state(state: dict[str, Any], *, repaired_at: datetime) -> dict[str,
                 "no active mutating workflow or recent branch/PR activity."
             ),
             "lastAbandonedRunId": abandoned_run_id,
-            "lastAbandonedOwner": state.get("owner"),
             "lastAbandonedPhase": state.get("phase"),
             "lastAbandonedAt": repaired_at_text,
             "lastAbandonedLeaseExpiresAt": state.get("leaseExpiresAt"),
