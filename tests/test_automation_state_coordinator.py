@@ -20,8 +20,6 @@ def idle_state(**overrides: object) -> dict[str, object]:
         "mode": "normal",
         "phase": "idle",
         "runId": None,
-        "owner": None,
-        "executionSource": None,
         "startedAt": None,
         "heartbeatAt": None,
         "leaseExpiresAt": None,
@@ -50,8 +48,6 @@ def acquire_command(run_id: str = "run-1") -> dict[str, object]:
         "commandId": "acquire-1",
         "operation": "acquire",
         "runId": run_id,
-        "owner": "chatgpt-github-app",
-        "executionSource": "manual",
         "mode": "normal",
         "phase": "LOCK_ACQUISITION",
         "startedAt": started,
@@ -60,7 +56,7 @@ def acquire_command(run_id: str = "run-1") -> dict[str, object]:
         "softStopAt": coordinator.now_iso(NOW + timedelta(minutes=50)),
         "cleanupAt": coordinator.now_iso(NOW + timedelta(minutes=55)),
         "hardKillAt": coordinator.now_iso(NOW + timedelta(minutes=58, seconds=30)),
-        "deadlineAt": coordinator.now_iso(NOW + timedelta(minutes=59)),
+        "deadlineAt": coordinator.now_iso(NOW + timedelta(minutes=58, seconds=30)),
         "baseMainSha": "base",
         "workBranch": None,
         "workBranchHeadSha": None,
@@ -175,6 +171,36 @@ class CommandTests(unittest.TestCase):
         self.assertTrue(result.already_processed)
         self.assertEqual(result.state, state)
 
+    def test_provenance_fields_are_rejected_in_commands(self) -> None:
+        for field in coordinator.FORBIDDEN_PROVENANCE_FIELDS:
+            command = acquire_command()
+            command[field] = "forbidden"
+            with self.subTest(field=field):
+                with self.assertRaisesRegex(ValueError, "provenance"):
+                    coordinator.validate_contract(command, idle_state(), REPOSITORY)
+
+    def test_legacy_provenance_is_removed_from_state(self) -> None:
+        state = idle_state(
+            owner="legacy-client",
+            executionSource="legacy-source",
+            lastAbandonedOwner="legacy-owner",
+        )
+        command = {
+            "schemaVersion": 3,
+            "commandId": "inspect-scrub",
+            "operation": "inspect",
+        }
+        result = coordinator.apply_command(
+            command=command,
+            state=state,
+            repository=REPOSITORY,
+            processed_at=NOW,
+        )
+        self.assertTrue(result.accepted)
+        self.assertNotIn("owner", result.state)
+        self.assertNotIn("executionSource", result.state)
+        self.assertNotIn("lastAbandonedOwner", result.state)
+
 
 class WorkflowContractTests(unittest.TestCase):
     def test_workflow_uses_importable_module_without_sender_allowlist(self) -> None:
@@ -183,6 +209,23 @@ class WorkflowContractTests(unittest.TestCase):
         self.assertIn("python -m tools.automation_state_coordinator", workflow)
         self.assertNotIn("unauthorized sender", workflow)
         self.assertNotIn("sender not in", workflow)
+
+    def test_workflow_has_event_loss_fallbacks(self) -> None:
+        workflow = pathlib.Path(".github/workflows/automation-state.yml").read_text(encoding="utf-8")
+        self.assertIn('cron: "*/5 * * * *"', workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("github.event_name != 'issues'", workflow)
+
+    def test_operational_sources_do_not_name_execution_clients(self) -> None:
+        paths = (
+            pathlib.Path(".github/workflows/automation-state.yml"),
+            pathlib.Path("tools/automation_state_coordinator.py"),
+            pathlib.Path("tests/test_automation_state_coordinator.py"),
+        )
+        combined = "\n".join(path.read_text(encoding="utf-8").lower() for path in paths)
+        forbidden_fragments = ("chatgpt", "openai", "scheduled-chat", "github-connector")
+        for fragment in forbidden_fragments:
+            self.assertNotIn(fragment, combined)
 
 
 if __name__ == "__main__":
