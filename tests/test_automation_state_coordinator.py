@@ -177,9 +177,10 @@ class CommandTests(unittest.TestCase):
 
 
 class WorkflowContractTests(unittest.TestCase):
-    def test_workflow_uses_extracted_coordinator_without_sender_allowlist(self) -> None:
+    def test_workflow_uses_importable_module_without_sender_allowlist(self) -> None:
         workflow = pathlib.Path(".github/workflows/automation-state.yml").read_text(encoding="utf-8")
-        self.assertIn("python tools/automation_state_coordinator.py", workflow)
+        self.assertIn("PYTHONPATH: .", workflow)
+        self.assertIn("python -m tools.automation_state_coordinator", workflow)
         self.assertNotIn("unauthorized sender", workflow)
         self.assertNotIn("sender not in", workflow)
 
