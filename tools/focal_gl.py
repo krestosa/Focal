@@ -169,8 +169,11 @@ def run_probe(args: argparse.Namespace) -> Result:
         command=args.command,
         outcome="PASS",
         exitCode=EXIT_OK,
-        evidenceLevel="GL_COMPILE_LINK",
-        message="A real offscreen OpenGL context was created and queried.",
+        evidenceLevel="STATIC",
+        message=(
+            "A real offscreen OpenGL context was created and queried; no shader "
+            "compile/link or render/readback evidence is claimed."
+        ),
         artifacts=str(args.artifacts) if args.artifacts else None,
         details=details,
     )
