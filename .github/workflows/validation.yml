@@ -147,7 +147,7 @@ jobs:
       - name: Run real hidden GLFW probe
         run: |
           xvfb-run --auto-servernum --server-args="-screen 0 640x480x24" \
-            ./focal-gl probe \
+            python focal-gl probe \
               --backend glfw \
               --gl-version 3.3 \
               --gl-profile core \
