@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Stable command-line contract for Focal's standalone OpenGL harness.
-
-This module intentionally implements only GLCLI-001. Runtime OpenGL context,
-compile, render and suite execution are introduced by later roadmap units.
-"""
+"""Stable command-line contract for Focal's standalone OpenGL harness."""
 
 from __future__ import annotations
 
@@ -12,9 +8,11 @@ import json
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
-VERSION = "0.1.0"
+from tools.focal_gl_context import ContextUnavailable, probe_context
+
+VERSION = "0.2.0"
 SCHEMA_VERSION = 1
 
 EXIT_OK = 0
@@ -53,6 +51,7 @@ class Result:
     evidenceLevel: str
     message: str
     artifacts: str | None
+    details: dict[str, Any] | None = None
 
 
 def _positive_int(value: str) -> int:
@@ -123,7 +122,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _not_implemented_result(args: argparse.Namespace) -> Result:
+def _unsupported_result(args: argparse.Namespace) -> Result:
     return Result(
         schemaVersion=SCHEMA_VERSION,
         harnessVersion=VERSION,
@@ -132,10 +131,48 @@ def _not_implemented_result(args: argparse.Namespace) -> Result:
         exitCode=EXIT_CONTEXT_UNAVAILABLE,
         evidenceLevel="STATIC",
         message=(
-            "GLCLI-001 command contract is available; real OpenGL execution "
-            "requires GLCLI-002 and subsequent runtime units."
+            "Real context probing is available through `probe`; compile, render and "
+            "suite execution require GLCLI-004 and subsequent runtime units."
         ),
         artifacts=str(args.artifacts) if args.artifacts else None,
+    )
+
+
+def run_probe(args: argparse.Namespace) -> Result:
+    try:
+        details = probe_context(
+            version=args.gl_version,
+            profile=args.gl_profile,
+            size=args.size,
+            backend=args.backend,
+        )
+    except ContextUnavailable as exc:
+        return Result(
+            schemaVersion=SCHEMA_VERSION,
+            harnessVersion=VERSION,
+            command=args.command,
+            outcome="UNSUPPORTED",
+            exitCode=EXIT_CONTEXT_UNAVAILABLE,
+            evidenceLevel="STATIC",
+            message=str(exc),
+            artifacts=str(args.artifacts) if args.artifacts else None,
+            details={
+                "requestedBackend": args.backend,
+                "requestedGlVersion": args.gl_version,
+                "requestedProfile": args.gl_profile,
+                "requestedSize": args.size,
+            },
+        )
+    return Result(
+        schemaVersion=SCHEMA_VERSION,
+        harnessVersion=VERSION,
+        command=args.command,
+        outcome="PASS",
+        exitCode=EXIT_OK,
+        evidenceLevel="GL_COMPILE_LINK",
+        message="A real offscreen OpenGL context was created and queried.",
+        artifacts=str(args.artifacts) if args.artifacts else None,
+        details=details,
     )
 
 
@@ -145,13 +182,15 @@ def emit(result: Result, json_output: bool) -> None:
         return
     print(f"focal-gl {result.harnessVersion}: {result.command}: {result.outcome}")
     print(result.message)
+    if result.details:
+        print(json.dumps(result.details, indent=2, sort_keys=True))
     print(f"evidence={result.evidenceLevel} exit={result.exitCode}")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    result = _not_implemented_result(args)
+    result = run_probe(args) if args.command == "probe" else _unsupported_result(args)
     emit(result, args.json_output)
     return result.exitCode
 
