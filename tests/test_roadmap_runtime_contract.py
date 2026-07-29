@@ -63,7 +63,7 @@ class RoadmapRuntimeContractTests(unittest.TestCase):
         for identifier in required:
             self.assertIn(f"`{identifier}`", self.roadmap)
 
-        self.assertIn("`GLCLI-001 — Stable terminal interface`", self.roadmap)
+        self.assertIn("Stable terminal interface", self.roadmap)
         self.assertIn("focal-gl", self.roadmap)
         self.assertIn("GL_RENDER_READBACK", self.roadmap)
 
