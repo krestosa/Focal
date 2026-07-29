@@ -1,0 +1,54 @@
+name: Reconcile Roadmap Once
+
+on:
+  push:
+    branches:
+      - docs/reconcile-glcli-001-after-history-rewrite
+
+permissions:
+  contents: write
+
+concurrency:
+  group: focal-autonomous-development
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: docs/reconcile-glcli-001-after-history-rewrite
+      - name: Reconcile canonical roadmap
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('docs/ROADMAP.md')
+          text = path.read_text(encoding='utf-8')
+          replacements = {
+              '- Baseline audited: `edf287f5dbb0aaff379432d05697936141f23638`': '- Baseline audited: `020d00ea065ff16e1b0e7653e7f428424e2a19b8`',
+              '- Roadmap schema revision: `9`': '- Roadmap schema revision: `10`',
+              '| [ ] ⚪ `GLCLI-001` | P0 | Stable terminal interface: `probe`, `compile`, `render`, `suite`, human output, `--json`, artifacts and versioned exit codes. | CLI help and argument tests pass; exit codes 0/2/3/4/5/6/7/8 retain documented meanings. | [Programs][iris-programs], [Debugging][iris-debug] | **Next prioritized implementation unit.** Choose implementation language and package entrypoint. |': '| [x] 🟢 `GLCLI-001` | P0 | Stable terminal interface: `probe`, `compile`, `render`, `suite`, human output, `--json`, artifacts and versioned exit codes. | `focal-gl`, `tools/focal_gl.py` and `tests/test_focal_gl_cli.py` are on `main`; PR #62 Validation run `30424274484` passed the exact head. Evidence level: `STATIC`. | [Programs][iris-programs], [Debugging][iris-debug] | Preserve the contract; runtime context work continues in `GLCLI-002`. |',
+              '| [ ] ⚪ `GLCLI-002` | P0 | Real offscreen context creation and capability probe across EGL/hidden-window backends. | Reports vendor, renderer, GL/GLSL, profile, extensions, limits and unsupported reasons; Mesa CI context succeeds. | [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] | Depends on `GLCLI-001`. |': '| [ ] 🟡 `GLCLI-002` | P0 | Real offscreen context creation and capability probe across EGL/hidden-window backends. | Reports vendor, renderer, GL/GLSL, profile, extensions, limits and unsupported reasons; Mesa CI context succeeds. | [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] | `GLCLI-001` is complete; next action is an isolated EGL/Mesa probe with factual unsupported classification. |',
+              '1. Start `GLCLI-001` immediately; build context probe and minimum compile/link/render/readback before advanced visual work.': '1. Preserve completed `GLCLI-001`; implement `GLCLI-002` real context probing, then minimum compile/link/render/readback before advanced visual work.',
+              '`GLCLI-001 — Stable terminal interface`: create the `focal-gl` entrypoint with `probe`, `compile`, `render` and `suite`, versioned JSON schema, artifacts directory and stable exit codes. Follow immediately with `GLCLI-002` real offscreen context creation and a minimum `GLCLI-004/005` compile-link-render-readback path.': '`GLCLI-002 — Real offscreen context and capability probe`: add an isolated EGL/Mesa path that reports vendor, renderer, OpenGL/GLSL versions, profile, extensions and relevant limits, while preserving explicit unsupported results for unavailable backends. Follow with `GLCLI-004/005` compile-link-render-readback.',
+          }
+          for old, new in replacements.items():
+              if old not in text:
+                  raise SystemExit(f'missing expected roadmap text: {old[:80]}')
+              text = text.replace(old, new, 1)
+          marker = '- `2026-07-29` — Revision 9 expanded every roadmap feature with observable scope, acceptance/tests and direct Iris documentation; added the mandatory `focal-gl` OpenGL runtime harness family.'
+          addition = marker + '\n- `2026-07-29` — Revision 10 reconciled merged `GLCLI-001` evidence after the main-history cleanup and advanced the active unit to `GLCLI-002`.'
+          if marker not in text:
+              raise SystemExit('missing audit history marker')
+          text = text.replace(marker, addition, 1)
+          path.write_text(text, encoding='utf-8')
+      - name: Commit reconciliation
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add docs/ROADMAP.md
+          git diff --cached --check
+          git commit -m "Reconcile GLCLI-001 completion"
+          git push origin HEAD:docs/reconcile-glcli-001-after-history-rewrite
