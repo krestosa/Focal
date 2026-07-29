@@ -5,9 +5,10 @@ Canonical capability evidence for Focal. This document is linked to [`ROADMAP.md
 ## Audit metadata
 
 - Reviewed UTC: `2026-07-29`
-- Focal baseline: `4d09aa437ae2702e30659f02a10fc21fe2480cbc`
+- Focal baseline: `a923de04de5aa0f97dc0420e80ea9623d24bae53`
 - Machine-readable stage contract: [`../spec/iris-stage-capabilities.json`](../spec/iris-stage-capabilities.json)
 - Machine-readable buffer lifecycle contract: [`../spec/iris-buffer-lifecycle.json`](../spec/iris-buffer-lifecycle.json)
+- Machine-readable output-directive contract: [`../spec/iris-output-directives.json`](../spec/iris-output-directives.json)
 - Version rule: exact Minecraft, Iris, Sodium, Fabric Loader and Java versions remain `PENDIENTE DE VERIFICAR` until a mutually compatible release set is pinned and exercised.
 
 ## Status vocabulary
@@ -31,6 +32,8 @@ Reviewed on `2026-07-29` UTC:
 - https://shaders.properties/current/reference/buffers/depthtex/
 - https://shaders.properties/current/reference/buffers/shadowtex/
 - https://shaders.properties/current/reference/shadersproperties/rendering/
+- https://shaders.properties/current/reference/constants/rendertargets/
+- https://shaders.properties/current/reference/constants/drawbuffers/
 - https://shaders.properties/current/reference/constants/buffer_format/
 - https://shaders.properties/current/reference/constants/buffer_clear/
 - https://shaders.properties/current/reference/constants/buffer_clear_color/
@@ -52,6 +55,8 @@ Reviewed on `2026-07-29` UTC:
 | `IRIS-BUFFER-001` | Color attachment lifecycle | PARCIAL | Iris exposes at least 16 `colortex` attachments; defaults are display-sized RGBA, configurable for format, clear, size and flip. Resized attachments cannot be gbuffers outputs. | SAFE requires only indices 0–7, default-compatible formats and no resized gbuffers targets. | Machine-readable lifecycle contract, regression tests and later runtime framebuffer validation. | `IRIS-003`, `PIPE-005`, `PROFILE-001` |
 | `IRIS-BUFFER-002` | Depth attachment lifecycle | SOPORTADA | `depthtex0`–`2` are display-sized, non-flipping, fixed-clear depth buffers with progressively narrower geometry coverage. | Treat precision as driver-dependent; never persist or resize depth attachments. | Static contract plus later depth coverage fixture. | `IRIS-003`, `TEMP-001`, `QA-003` |
 | `IRIS-BUFFER-003` | Shadow depth lifecycle | PARCIAL | `shadowtex0`–`1` use shadow resolution, fixed clear, no flipping and optional mipmaps/hardware comparison. | SAFE cannot depend on hardware comparison or shadowcolor mipmaps. | Static contract plus shadow pass framebuffer fixture. | `IRIS-003`, `SHADOW-001`, `PROFILE-001` |
+| `IRIS-OUTPUT-001` | Fragment output directives and constants | SOPORTADA | `RENDERTARGETS` maps fragment outputs in declared order; legacy `DRAWBUFFERS` is limited to indices 0–9. Formats, clears and clear colors are pack-global constants. | SAFE prefers `RENDERTARGETS`, requires every bound output to be initialized and limits required color attachments to `colortex0`–`7`. | Machine-readable output-directive contract, regression tests and later runtime framebuffer validation. | `IRIS-004`, `PIPE-005`, `PROFILE-001`, `SAFE-001` |
+| `IRIS-OUTPUT-002` | Per-buffer blending | PARCIAL | Program-level blending is supported; per-buffer blending depends on `PER_BUFFER_BLENDING`. | SAFE treats per-buffer blending as optional and falls back to program-level blending or disabled blending. | Static contract plus a runtime fixture comparing per-buffer and fallback paths. | `IRIS-004`, `PROFILE-001`, `QA-003` |
 
 ## Program execution order
 
@@ -111,6 +116,18 @@ The authoritative machine-readable contract is `spec/iris-buffer-lifecycle.json`
 - Documented shadowcolor mipmap directives are currently unreliable; no Focal profile may depend on them.
 - Hardware shadow comparison is optional. Separate raw and comparison samplers require `SEPARATE_HARDWARE_SAMPLERS`.
 
+## Output directive contract
+
+The authoritative machine-readable contract is `spec/iris-output-directives.json`, covered by `tests/test_iris_output_directives.py`.
+
+- `RENDERTARGETS` is the preferred fragment-output directive. Its comma-separated attachment indices map outputs by declaration order.
+- When neither `RENDERTARGETS` nor `DRAWBUFFERS` is present, the first eight color attachments are bound by default.
+- Every bound fragment output must be written; unwritten outputs are undefined and are rejected by the Focal contract.
+- Legacy `DRAWBUFFERS` uses compact decimal indices and cannot address attachments above index 9.
+- Buffer formats, clear enablement and clear colors are pack-global constants and must have one effective definition.
+- Persistent buffers require clearing disabled and explicit initialization before first use; persistence does not by itself establish valid history.
+- Per-buffer blending is capability-gated. SAFE falls back to program-level blending or disabled blending.
+
 ## Gbuffers inventory status
 
 Current program-name acceptance and vertex/fragment pair validation are implemented by `tools/shader_inventory.py` and `tests/test_shader_inventory.py`. Existing files are foundation evidence, not runtime acceptance. Unsupported `gbuffers_entities_glowing` must not be added; supported render-state data or the documented entity fallback must be used.
@@ -121,6 +138,6 @@ Current documentation confirms feature flags, program ordering, custom uniforms,
 
 ## Acceptance and next work
 
-`IRIS-001` and `IRIS-002` are complete through their machine-readable contracts, regression tests and synchronized roadmap evidence. `IRIS-003` is complete only when the buffer lifecycle contract, tests, this matrix update and the synchronized roadmap are merged with green Validation. Runtime framebuffer acceptance remains assigned to `QA-003` and client integration items.
+`IRIS-001`, `IRIS-002` and `IRIS-003` are complete through their machine-readable contracts, regression tests and synchronized roadmap evidence. `IRIS-004` has a complete static contract and green Validation in PR #58, but remains in progress until that PR is merged and post-merge roadmap reconciliation is published. Runtime framebuffer acceptance remains assigned to `QA-003` and client integration items.
 
-Next unit after `IRIS-003`: `IRIS-004` — define and validate constants and output directives including `RENDERTARGETS`, legacy `DRAWBUFFERS`, formats, clears and blend behavior.
+Next unit after `IRIS-004`: `IRIS-005` — define and validate uniforms, attributes, matrices, camera/world/time/weather/entity data and reserved names.
