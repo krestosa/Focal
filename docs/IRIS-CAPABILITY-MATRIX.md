@@ -5,7 +5,7 @@ Canonical capability evidence for Focal. This document is linked to [`ROADMAP.md
 ## Audit metadata
 
 - Reviewed UTC: `2026-07-29`
-- Focal baseline: `a923de04de5aa0f97dc0420e80ea9623d24bae53`
+- Focal baseline: `63219f9282958cf9d84c75881760481ec8f3a828`
 - Machine-readable stage contract: [`../spec/iris-stage-capabilities.json`](../spec/iris-stage-capabilities.json)
 - Machine-readable buffer lifecycle contract: [`../spec/iris-buffer-lifecycle.json`](../spec/iris-buffer-lifecycle.json)
 - Machine-readable output-directive contract: [`../spec/iris-output-directives.json`](../spec/iris-output-directives.json)
@@ -138,6 +138,6 @@ Current documentation confirms feature flags, program ordering, custom uniforms,
 
 ## Acceptance and next work
 
-`IRIS-001`, `IRIS-002` and `IRIS-003` are complete through their machine-readable contracts, regression tests and synchronized roadmap evidence. `IRIS-004` has a complete static contract and green Validation in PR #58, but remains in progress until that PR is merged and post-merge roadmap reconciliation is published. Runtime framebuffer acceptance remains assigned to `QA-003` and client integration items.
+`IRIS-001`, `IRIS-002`, `IRIS-003` and `IRIS-004` are complete through their machine-readable contracts, regression tests, synchronized capability evidence and merged roadmap records. Runtime framebuffer acceptance remains assigned to `QA-003` and client integration items.
 
-Next unit after `IRIS-004`: `IRIS-005` — define and validate uniforms, attributes, matrices, camera/world/time/weather/entity data and reserved names.
+Next unit: `IRIS-005` — define and validate uniforms, attributes, varyings, matrices, camera/world/time/weather/entity data, previous-frame state and reserved names.
