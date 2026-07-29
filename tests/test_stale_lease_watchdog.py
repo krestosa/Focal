@@ -22,8 +22,6 @@ def working_state(**overrides: object) -> dict[str, object]:
         "mode": "normal",
         "phase": "CI_VALIDATION",
         "runId": "run-1",
-        "owner": "scheduled-chat",
-        "executionSource": "scheduled-chat",
         "startedAt": "2026-07-29T05:00:00Z",
         "heartbeatAt": "2026-07-29T05:10:00Z",
         "leaseExpiresAt": "2026-07-29T05:30:00Z",
@@ -117,6 +115,9 @@ class RepairTests(unittest.TestCase):
         self.assertEqual(repaired["lastRunId"], "run-1")
         self.assertEqual(repaired["lastResult"], "PARTIAL")
         self.assertEqual(repaired["lastAbandonedRunId"], "run-1")
+        self.assertNotIn("owner", repaired)
+        self.assertNotIn("executionSource", repaired)
+        self.assertNotIn("lastAbandonedOwner", repaired)
         self.assertEqual(repaired["lastAbandonedWorkBranch"], "feature/example")
         self.assertEqual(repaired["lastWatchdogAction"], "STALE_LEASE_RELEASED")
         self.assertEqual(repaired["version"], 11)

@@ -4,6 +4,9 @@ on:
   issues:
     types:
       - edited
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,7 +19,7 @@ concurrency:
 
 jobs:
   coordinate:
-    if: github.event.issue.number == 7
+    if: github.event_name != 'issues' || github.event.issue.number == 7
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
