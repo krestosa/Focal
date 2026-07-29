@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "reviewedUtc": "2026-07-29",
+  "sources": [
+    "https://shaders.properties/current/reference/buffers/overview/",
+    "https://shaders.properties/current/reference/buffers/colortex/",
+    "https://shaders.properties/current/reference/buffers/depthtex/",
+    "https://shaders.properties/current/reference/buffers/shadowtex/",
+    "https://shaders.properties/current/reference/shadersproperties/rendering/",
+    "https://shaders.properties/current/reference/constants/buffer_format/",
+    "https://shaders.properties/current/reference/constants/buffer_clear/",
+    "https://shaders.properties/current/reference/constants/buffer_clear_color/",
+    "https://shaders.properties/current/reference/constants/colortex_mipmaps/",
+    "https://shaders.properties/current/reference/constants/shadow_mipmaps/"
+  ],
+  "colorAttachments": {
+    "minimumPortableCount": 16,
+    "extendedCountSinceIris": "1.10.5",
+    "extendedCount": 32,
+    "defaultFormat": "RGBA",
+    "defaultResolution": "display",
+    "writablePrograms": ["begin", "prepare", "gbuffers", "deferred", "composite"],
+    "gbuffersReadRestriction": [0, 1, 2, 3],
+    "defaultClear": {
+      "colortex0": "fogColor, alpha 1.0",
+      "colortex1": "vec4(1.0)",
+      "other": "vec4(0.0)"
+    },
+    "clearConfigurable": true,
+    "clearColorConfigurable": true,
+    "doubleBuffered": true,
+    "defaultCompositeStyleFlip": true,
+    "computeOnlyPassTriggersFlip": false,
+    "resizedBufferGbuffersWritable": false,
+    "samePassOutputSizesMustMatch": true,
+    "safePolicy": {
+      "maximumRequiredIndex": 7,
+      "historyRequiresClearDisabled": true,
+      "historyRequiresExplicitResetProtocol": true,
+      "nonDefaultFormatRequiresDocumentedRange": true,
+      "resizedAttachmentsForbiddenForGbuffersOutputs": true
+    }
+  },
+  "depthAttachments": {
+    "count": 3,
+    "names": ["depthtex0", "depthtex1", "depthtex2"],
+    "coverage": {
+      "depthtex0": "all geometry",
+      "depthtex1": "excludes transparent geometry",
+      "depthtex2": "excludes transparent and hand geometry"
+    },
+    "resolution": "display-fixed",
+    "format": "driver-dependent depth, commonly 24 or 32 bit",
+    "clear": "vec4(1.0)",
+    "clearConfigurable": false,
+    "flips": false,
+    "manualWriteRequiresAllPaths": true
+  },
+  "shadowDepthAttachments": {
+    "count": 2,
+    "names": ["shadowtex0", "shadowtex1"],
+    "coverage": {
+      "shadowtex0": "all shadow geometry",
+      "shadowtex1": "excludes transparent shadow geometry"
+    },
+    "resolution": "shadowMapResolution",
+    "format": "driver-dependent depth, commonly 24 or 32 bit",
+    "clear": "vec4(1.0)",
+    "clearConfigurable": false,
+    "flips": false,
+    "mipmapsSupported": true,
+    "hardwareComparisonOptional": true,
+    "separateHardwareSamplersRequireFlag": "SEPARATE_HARDWARE_SAMPLERS"
+  },
+  "mipmaps": {
+    "colortexGenerationTiming": "immediately before the declaring composite-style fragment program",
+    "colortexAllowedPrograms": ["begin", "prepare", "deferred", "composite"],
+    "shadowDepthGenerationTiming": "after shadow and before shadowcomp",
+    "shadowColorKnownLimitation": "documented directives currently do not generate shadowcolor mipmaps"
+  },
+  "viewportAndScaling": {
+    "scaleDirectiveChangesViewportNotAttachmentResolution": true,
+    "scaleRange": [0.0, 1.0],
+    "sizeBufferAcceptsAbsoluteOrRelativeDimensions": true,
+    "resizedBuffersCompositeStyleOnly": true
+  },
+  "pingPong": {
+    "appliesTo": "colortex",
+    "mainReadAltWritePrograms": ["begin", "shadowcomp", "prepare", "deferred", "composite"],
+    "swapAfterProgramByDefault": true,
+    "controllableBy": "flip.<program>.<bufferName>",
+    "noFragmentStageMeansNoAutomaticFlip": true
+  },
+  "fallbacks": {
+    "safeAttachmentCount": 8,
+    "safeFormats": ["RGBA8-compatible", "depth hardware default"],
+    "safeNoResizedGbufferTargets": true,
+    "safeNoPersistentHistoryUntilResetProtocol": true,
+    "safeNoShadowColorMipmapDependency": true,
+    "safeNoHardwareComparisonDependency": true
+  }
+}

@@ -5,9 +5,9 @@
 Maintain one evidence-based plan for completing Focal as a safe, scalable Iris shader pack. Work not represented here must be added before implementation.
 
 - Canonical Iris evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md)
-- Audit UTC: `2026-07-29T02:22:00Z`
-- Baseline audited: `3b6e30311569ef994d860892570e875ef15b3af6`
-- Roadmap schema revision: `4`
+- Audit UTC: `2026-07-29T03:20:00Z`
+- Baseline audited: `4d09aa437ae2702e30659f02a10fc21fe2480cbc`
+- Roadmap schema revision: `5`
 - Current stage: Phase 1 foundation, capability contracts and static validation
 
 ## Status legend
@@ -29,7 +29,7 @@ A checked item requires implementation on `main`, applicable tests, green releva
 | Sodium | 🟣 REVALIDAR | Pin the version required by the selected Iris release. |
 | Fabric Loader/API | 🟣 REVALIDAR | Pin compatible versions and hashes. |
 | Java | 🟣 REVALIDAR | Confirm the official runtime requirement. |
-| OpenGL/GLSL | 🟡 EN PROGRESO | SAFE stage baseline is specified; runtime contexts remain unverified. |
+| OpenGL/GLSL | 🟡 EN PROGRESO | SAFE stage and buffer lifecycle baselines are specified; runtime contexts remain unverified. |
 | Drivers/hardware | ⚪ PENDIENTE | Establish representative Mesa and vendor evidence. |
 
 ## 1. Governance, coordination and recovery
@@ -51,7 +51,7 @@ A checked item requires implementation on `main`, applicable tests, green releva
 
 - [x] 🟢 COMPLETADO — `IRIS-001` Program inventory. Evidence: matrix, `tools/shader_inventory.py`, `tests/test_shader_inventory.py`, PR #53 and Validation run `30410900109`.
 - [x] 🟢 COMPLETADO — `IRIS-002` Stage inventory. Evidence: `spec/iris-stage-capabilities.json`, `tests/test_iris_stage_capabilities.py`, [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md) and PR #55. Acceptance covers vertex, fragment, geometry, compute and tessellation scope; feature flags; OpenGL 4.3 and macOS limits; 27-file compute bound; paired triangle tessellation; and deterministic SAFE fallbacks.
-- [ ] ⚪ PENDIENTE — `IRIS-003` Buffer and attachment lifecycle: colortex, depth, shadow, history, formats, clear, mipmaps, viewport, scaling and ping-pong.
+- [ ] 🟡 EN PROGRESO — `IRIS-003` Buffer and attachment lifecycle. Branch `docs/iris-buffer-lifecycle-contract` defines and tests colortex, depth, shadow, history, formats, clear, mipmaps, viewport, scaling and ping-pong; merge and runtime framebuffer acceptance remain.
 - [ ] ⚪ PENDIENTE — `IRIS-004` Constants and directives including `DRAWBUFFERS`, `RENDERTARGETS`, formats, clears and blend.
 - [ ] ⚪ PENDIENTE — `IRIS-005` Uniforms, attributes, matrices, camera/world/time/weather/entity data and reserved names.
 - [ ] ⚪ PENDIENTE — `IRIS-006` Complete `shaders.properties` directive matrix, feature flags, resources, SSBO and dispatch.
@@ -166,7 +166,8 @@ A checked item requires implementation on `main`, applicable tests, green releva
 - `2026-07-28` — Revision 2 linked the canonical Iris matrix.
 - `2026-07-29` — Revision 3 accepted the machine-readable shader inventory.
 - `2026-07-29` — Revision 4 accepted the stage capability contract, tests and canonical matrix update from PR #55.
+- `2026-07-29` — Revision 5 began the buffer lifecycle contract with primary-source evidence and static regression coverage.
 
 ## Next prioritized unit
 
-`IRIS-003 — Buffer and attachment lifecycle contract`: define and machine-check color, depth, shadow and history attachments; formats; clear behavior; mipmaps; viewport scaling; ping-pong rules; and SAFE resource fallbacks before designing the HDR G-buffer.
+Complete `IRIS-003 — Buffer and attachment lifecycle contract`, merge the specification and tests with green Validation, then reconcile its evidence on `main` before selecting `IRIS-004`.
