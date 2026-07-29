@@ -28,5 +28,6 @@ jobs:
       - name: Validate and apply state command
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONPATH: .
           STATE_ISSUE_NUMBER: "7"
-        run: python tools/automation_state_coordinator.py --issue "$STATE_ISSUE_NUMBER"
+        run: python -m tools.automation_state_coordinator --issue "$STATE_ISSUE_NUMBER"
