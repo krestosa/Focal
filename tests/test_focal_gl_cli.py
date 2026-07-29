@@ -118,7 +118,8 @@ class FocalGlCliTests(unittest.TestCase):
         self.assertEqual(exit_code, focal_gl.EXIT_OK)
         self.assertEqual(payload["outcome"], "PASS")
         self.assertEqual(payload["details"], details)
-        self.assertEqual(payload["evidenceLevel"], "GL_CONTEXT")
+        self.assertEqual(payload["evidenceLevel"], "STATIC")
+        self.assertIn("no shader compile/link", payload["message"])
 
     def test_probe_failure_is_context_unavailable(self) -> None:
         output = io.StringIO()
