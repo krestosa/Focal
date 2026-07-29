@@ -67,7 +67,7 @@ def acquire_command(run_id: str = "run-1") -> dict[str, object]:
 
 
 class CommandTests(unittest.TestCase):
-    def test_inspect_depends_on_issue_command_not_sender_login(self) -> None:
+    def test_inspect_uses_command_contract_only(self) -> None:
         command = {
             "schemaVersion": 3,
             "commandId": "inspect-from-installed-app",
