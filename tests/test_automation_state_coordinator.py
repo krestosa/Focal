@@ -223,7 +223,12 @@ class WorkflowContractTests(unittest.TestCase):
             pathlib.Path("tests/test_automation_state_coordinator.py"),
         )
         combined = "\n".join(path.read_text(encoding="utf-8").lower() for path in paths)
-        forbidden_fragments = ("chatgpt", "openai", "scheduled-chat", "github-connector")
+        forbidden_fragments = (
+            "chat" + "gpt",
+            "open" + "ai",
+            "scheduled" + "-chat",
+            "github" + "-connector",
+        )
         for fragment in forbidden_fragments:
             self.assertNotIn(fragment, combined)
 
