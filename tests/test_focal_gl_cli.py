@@ -12,10 +12,29 @@ ENTRYPOINT = ROOT / "focal-gl"
 
 class FocalGlCliTests(unittest.TestCase):
     def run_cli(self, *args: str) -> subprocess.CompletedProcess[str]:
-        return subprocess.run([sys.executable, str(ENTRYPOINT), *args], cwd=ROOT, text=True, capture_output=True, timeout=10, check=False)
+        return subprocess.run(
+            [sys.executable, str(ENTRYPOINT), *args],
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            timeout=10,
+            check=False,
+        )
 
     def test_stable_exit_code_meanings(self) -> None:
-        self.assertEqual(focal_gl.EXIT_CODES, {0:"all required checks passed",2:"invalid usage or configuration",3:"OpenGL context unavailable",4:"shader compilation or link failure",5:"OpenGL, framebuffer or execution failure",6:"output invariant failure",7:"timeout, worker termination or context loss",8:"required capability unsupported without accepted fallback"})
+        self.assertEqual(
+            focal_gl.EXIT_CODES,
+            {
+                0: "all required checks passed",
+                2: "invalid usage or configuration",
+                3: "OpenGL context unavailable",
+                4: "shader compilation or link failure",
+                5: "OpenGL, framebuffer or execution failure",
+                6: "output invariant failure",
+                7: "timeout, worker termination or context loss",
+                8: "required capability unsupported without accepted fallback",
+            },
+        )
 
     def test_help_lists_all_commands(self) -> None:
         result = self.run_cli("--help")
@@ -26,7 +45,7 @@ class FocalGlCliTests(unittest.TestCase):
     def test_version_is_stable(self) -> None:
         result = self.run_cli("--version")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.strip(), "focal-gl 0.2.0")
+        self.assertEqual(result.stdout.strip(), "focal-gl 0.3.0")
 
     def test_missing_command_is_usage_error(self) -> None:
         result = self.run_cli()
@@ -44,7 +63,7 @@ class FocalGlCliTests(unittest.TestCase):
                 result = self.run_cli(command, "--json", "--artifacts", "artifacts")
                 self.assertEqual(result.returncode, focal_gl.EXIT_CONTEXT_UNAVAILABLE)
                 payload = json.loads(result.stdout)
-                self.assertEqual(payload["harnessVersion"], "0.2.0")
+                self.assertEqual(payload["harnessVersion"], "0.3.0")
                 self.assertEqual(payload["command"], command)
                 self.assertEqual(payload["outcome"], "UNSUPPORTED")
                 self.assertEqual(payload["evidenceLevel"], "STATIC")
@@ -56,25 +75,82 @@ class FocalGlCliTests(unittest.TestCase):
         self.assertEqual(payload["outcome"], "UNSUPPORTED")
         self.assertIsNone(payload["context"])
 
+    def test_core_extension_enumeration_uses_gl_get_string_i(self) -> None:
+        extensions, api = focal_gl._enumerate_extensions(
+            lambda _enum: None,
+            lambda enum: 3 if enum == focal_gl.GL_NUM_EXTENSIONS else 0,
+            lambda _enum, index: (b"GL_EXT_beta", b"GL_EXT_alpha", b"GL_EXT_alpha")[index],
+        )
+        self.assertEqual(api, "glGetStringi")
+        self.assertEqual(extensions, ["GL_EXT_alpha", "GL_EXT_beta"])
+
+    def test_legacy_extension_enumeration_is_controlled_fallback(self) -> None:
+        extensions, api = focal_gl._enumerate_extensions(
+            lambda enum: b"GL_EXT_beta GL_EXT_alpha GL_EXT_alpha"
+            if enum == focal_gl.GL_EXTENSIONS
+            else None,
+            lambda _enum: 0,
+            None,
+        )
+        self.assertEqual(api, "glGetString")
+        self.assertEqual(extensions, ["GL_EXT_alpha", "GL_EXT_beta"])
+
+    def test_extension_enumeration_fails_factually_without_either_api(self) -> None:
+        with self.assertRaisesRegex(focal_gl.ContextUnavailable, "extension enumeration is unavailable"):
+            focal_gl._enumerate_extensions(lambda _enum: None, lambda _enum: 0, None)
+
     def test_egl_probe_reports_real_context_or_factual_unavailability(self) -> None:
         result = self.run_cli("probe", "--backend", "egl", "--json")
-        self.assertIn(result.returncode, (focal_gl.EXIT_OK, focal_gl.EXIT_CONTEXT_UNAVAILABLE), result.stderr)
+        self.assertIn(
+            result.returncode,
+            (focal_gl.EXIT_OK, focal_gl.EXIT_CONTEXT_UNAVAILABLE),
+            result.stderr,
+        )
         payload = json.loads(result.stdout)
         if result.returncode == focal_gl.EXIT_OK:
             self.assertEqual(payload["outcome"], "PASS")
             context = payload["context"]
             self.assertIn(context["backend"], ("egl-surfaceless", "egl-default"))
+            self.assertIn(context["extensionEnumeration"], ("glGetStringi", "glGetString"))
             for key in ("vendor", "renderer", "version", "glslVersion"):
                 self.assertTrue(context[key], key)
             self.assertGreater(context["limits"]["maxColorAttachments"], 0)
             self.assertGreater(context["limits"]["maxTextureSize"], 0)
+            self.assertEqual(context["limits"]["numExtensions"], len(context["extensions"]))
         else:
             self.assertEqual(payload["outcome"], "UNSUPPORTED")
             self.assertIsNone(payload["context"])
             self.assertTrue(payload["message"])
 
     def test_common_contract_arguments_parse(self) -> None:
-        result = self.run_cli("compile", "--pack", "shaders", "--program", "gbuffers_basic", "--fixture", "triangle", "--profile", "BALANCED", "--dimension", "the_nether", "--backend", "egl", "--gl-version", "4.3", "--gl-profile", "core", "--size", "640x360", "--frames", "2", "--timeout", "5", "--source-mode", "preprocessed", "--json")
+        result = self.run_cli(
+            "compile",
+            "--pack",
+            "shaders",
+            "--program",
+            "gbuffers_basic",
+            "--fixture",
+            "triangle",
+            "--profile",
+            "BALANCED",
+            "--dimension",
+            "the_nether",
+            "--backend",
+            "egl",
+            "--gl-version",
+            "4.3",
+            "--gl-profile",
+            "core",
+            "--size",
+            "640x360",
+            "--frames",
+            "2",
+            "--timeout",
+            "5",
+            "--source-mode",
+            "preprocessed",
+            "--json",
+        )
         self.assertEqual(result.returncode, focal_gl.EXIT_CONTEXT_UNAVAILABLE)
         self.assertEqual(json.loads(result.stdout)["command"], "compile")
 
