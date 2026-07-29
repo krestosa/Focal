@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "reviewedUtc": "2026-07-29",
+  "sources": [
+    "https://shaders.properties/current/reference/constants/rendertargets/",
+    "https://shaders.properties/current/reference/constants/drawbuffers/",
+    "https://shaders.properties/current/reference/constants/buffer_format/",
+    "https://shaders.properties/current/reference/constants/buffer_clear/",
+    "https://shaders.properties/current/reference/constants/buffer_clear_color/",
+    "https://shaders.properties/current/reference/shadersproperties/rendering/",
+    "https://shaders.properties/current/reference/shadersproperties/flags/"
+  ],
+  "directives": {
+    "rendertargets": {
+      "syntax": "/* RENDERTARGETS: X,Y,Z */",
+      "scope": "fragment",
+      "preferred": true,
+      "indices": {"minimum": 0, "portableMaximum": 15},
+      "defaultWhenAbsent": [0,1,2,3,4,5,6,7],
+      "requiresMultilineComment": true,
+      "outputMapping": "declared-order",
+      "allBoundOutputsMustBeWritten": true
+    },
+    "drawbuffers": {
+      "syntax": "/* DRAWBUFFERS:XYZ */",
+      "scope": "fragment",
+      "legacy": true,
+      "indices": {"minimum": 0, "maximum": 9},
+      "fallback": "RENDERTARGETS"
+    },
+    "format": {
+      "syntax": "const int <bufferName>Format = <format>;",
+      "scope": "pack-global",
+      "buffers": ["colortex", "shadowcolor"],
+      "singleDefinitionRequired": true
+    },
+    "clear": {
+      "syntax": "const bool <bufferName>Clear = <true|false>;",
+      "scope": "pack-global",
+      "persistentHistoryRequiresFalse": true,
+      "historyAlsoRequiresExplicitInitialization": true
+    },
+    "clearColor": {
+      "syntax": "const vec4 <bufferName>ClearColor = vec4(r,g,b,a);",
+      "scope": "pack-global",
+      "componentsRequired": 4
+    },
+    "blend": {
+      "programSyntax": "blend.<program>=<off|src dst srcA dstA>",
+      "bufferSyntax": "blend.<program>.<buffer>=<off|src dst srcA dstA>",
+      "perBufferFeature": "PER_BUFFER_BLENDING",
+      "safeFallback": "program-level blending or disabled blending"
+    }
+  },
+  "safeProfile": {
+    "useRendertargets": true,
+    "maximumColorAttachmentIndex": 7,
+    "requireAllDeclaredOutputsWritten": true,
+    "requireExplicitClearForPersistentBuffers": true,
+    "requireExplicitInitializationForPersistentBuffers": true,
+    "perBufferBlendingOptional": true,
+    "fallbackOnMissingPerBufferBlending": "program-level blending or disabled blending"
+  }
+}
