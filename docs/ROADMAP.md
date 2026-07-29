@@ -5,9 +5,9 @@
 Maintain one evidence-based plan for completing Focal as a safe, scalable Iris shader pack for the project target, currently declared as Minecraft Java 26.2 pending official version verification. Work not represented here must be added before implementation.
 
 - Canonical Iris evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md)
-- Audit UTC: `2026-07-28T23:23:00Z`
-- Baseline audited: `e7a4eb6aaa125710dce5e6243bbb955cc1235b67`
-- Roadmap schema revision: `2`
+- Audit UTC: `2026-07-29T00:23:00Z`
+- Baseline audited: `e1bff888f530d9134d9f3eac7abaaf24f93f9ee2`
+- Roadmap schema revision: `3`
 - Current stage: Phase 1 foundation, Iris capability inventory and static validation
 
 ## Status legend
@@ -49,9 +49,7 @@ A checked item requires implementation on `main`, applicable tests, green releva
 
 ## 3. Iris audit and compatibility
 
-- [ ] 🟡 IN PROGRESS — `IRIS-001` Program inventory.
-  - Published evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md) records program order, families, stages, suffixes, direct geometry access, documented fallbacks, current Focal evidence and tests.
-  - Acceptance remaining: machine-check every current Focal shader filename against the matrix and merge the matrix/roadmap reconciliation.
+- [x] ✅ COMPLETED — `IRIS-001` Program inventory. Evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md), `tools/shader_inventory.py`, `tests/test_shader_inventory.py`, PR #53 and Validation run `30410900109`.
 - [ ] ⚪ PENDING — `IRIS-002` Stage inventory: vertex, fragment, geometry, compute, tessellation, flags, OpenGL requirements and macOS fallback.
 - [ ] ⚪ PENDING — `IRIS-003` Buffer/attachment inventory: colortex, depth, shadow, history, formats, clear, mipmaps, viewport, scaling, ping-pong and lifetime.
 - [ ] ⚪ PENDING — `IRIS-004` Constants and directives including `DRAWBUFFERS`, `RENDERTARGETS`, formats, clears, blend and stage restrictions.
@@ -65,7 +63,7 @@ A checked item requires implementation on `main`, applicable tests, green releva
 ## 4. Pipeline, programs and resources
 
 - [x] ✅ COMPLETED — `PIPE-001` Minimal geometry foundations merged through PRs #41–#50; these are not full runtime acceptance.
-- [ ] 🔁 REVALIDATE — `PIPE-002` Machine-readable inventory of every existing stage mapped to recognized Iris names and fallback graph.
+- [x] ✅ COMPLETED — `PIPE-002` Machine-readable inventory of every existing stage mapped to recognized Iris names. Evidence: `tools/shader_inventory.py`, current-tree and negative-fixture tests in `tests/test_shader_inventory.py`, PR #53 and Validation run `30410900109`. The validator emits deterministic JSON, rejects unknown names, bounds repeatable suffixes to 1–99 and detects incomplete vertex/fragment pairs.
 - [ ] ⚪ PENDING — `PIPE-003` Remaining required gbuffers programs: basic, line, textured, lit, entities, block entities, hand, clouds, sky, water, portal and supported special effects.
 - [ ] ⚪ PENDING — `PIPE-004` Dimension-specific program selection and deterministic fallback.
 - [ ] ⚪ PENDING — `PIPE-005` HDR G-buffer schema for albedo, normals, material data, emission, depth, motion and history.
@@ -166,7 +164,8 @@ A checked item requires implementation on `main`, applicable tests, green releva
 
 - `2026-07-28` — Revision 1 created from merged governance, CI and geometry evidence.
 - `2026-07-28` — Revision 2 linked the canonical Iris matrix, reconciled program-family evidence and selected machine-readable shader inventory as the next acceptance gate.
+- `2026-07-29` — Revision 3 accepted the machine-readable shader inventory after PR #53 and Validation run `30410900109`; selected stage capability inventory as the next unit.
 
 ## Next prioritized unit
 
-`PIPE-002 — Existing program inventory`: implement a machine-readable scan of current `shaders/` stages, compare every filename and stage pair against [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md), report unsupported or ambiguous names, and add CI coverage before any new shader feature.
+`IRIS-002 — Stage capability inventory`: document and machine-check vertex, fragment, geometry, compute and tessellation stage constraints, required feature flags, OpenGL levels and deterministic SAFE/macOS fallbacks before adding advanced stages.
