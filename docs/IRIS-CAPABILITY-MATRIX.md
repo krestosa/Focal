@@ -11,6 +11,7 @@ Canonical capability evidence for Focal. This document is linked to [`ROADMAP.md
 - Machine-readable output-directive contract: [`../spec/iris-output-directives.json`](../spec/iris-output-directives.json)
 - Terminal OpenGL harness contract: [`OPENGL-RUNTIME-HARNESS.md`](OPENGL-RUNTIME-HARNESS.md)
 - Merged EGL probe evidence: [`evidence/GLCLI-002-EGL-PROBE.md`](evidence/GLCLI-002-EGL-PROBE.md)
+- Iris Patcher transforms shader source before GPU compilation; standalone source evidence remains distinct from patched and client evidence.
 - Version rule: exact Minecraft, Iris, Sodium, Fabric Loader and Java versions remain `PENDIENTE DE VERIFICAR` until a mutually compatible release set is pinned and exercised.
 
 ## Status vocabulary
