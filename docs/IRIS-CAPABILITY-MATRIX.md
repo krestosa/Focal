@@ -5,9 +5,10 @@ Canonical capability evidence for Focal. This document is linked to [`ROADMAP.md
 ## Audit metadata
 
 - Reviewed UTC: `2026-07-29`
-- Focal baseline: `4d09aa437ae2702e30659f02a10fc21fe2480cbc`
+- Focal baseline: `a923de04de5aa0f97dc0420e80ea9623d24bae53`
 - Machine-readable stage contract: [`../spec/iris-stage-capabilities.json`](../spec/iris-stage-capabilities.json)
 - Machine-readable buffer lifecycle contract: [`../spec/iris-buffer-lifecycle.json`](../spec/iris-buffer-lifecycle.json)
+- Terminal OpenGL harness contract: [`OPENGL-RUNTIME-HARNESS.md`](OPENGL-RUNTIME-HARNESS.md)
 - Version rule: exact Minecraft, Iris, Sodium, Fabric Loader and Java versions remain `PENDIENTE DE VERIFICAR` until a mutually compatible release set is pinned and exercised.
 
 ## Status vocabulary
@@ -22,20 +23,32 @@ Canonical capability evidence for Focal. This document is linked to [`ROADMAP.md
 
 Reviewed on `2026-07-29` UTC:
 
+- https://shaders.properties/current/reference/overview/
 - https://shaders.properties/current/reference/programs/overview/
 - https://shaders.properties/current/reference/programs/gbuffers/
 - https://shaders.properties/current/reference/programs/setup/
+- https://shaders.properties/current/reference/programs/final/
 - https://shaders.properties/current/reference/shadersproperties/flags/
+- https://shaders.properties/current/reference/shadersproperties/overview/
+- https://shaders.properties/current/reference/shadersproperties/rendering/
 - https://shaders.properties/current/reference/buffers/overview/
 - https://shaders.properties/current/reference/buffers/colortex/
 - https://shaders.properties/current/reference/buffers/depthtex/
 - https://shaders.properties/current/reference/buffers/shadowtex/
-- https://shaders.properties/current/reference/shadersproperties/rendering/
+- https://shaders.properties/current/reference/constants/overview/
+- https://shaders.properties/current/reference/constants/rendertargets/
+- https://shaders.properties/current/reference/constants/drawbuffers/
 - https://shaders.properties/current/reference/constants/buffer_format/
 - https://shaders.properties/current/reference/constants/buffer_clear/
 - https://shaders.properties/current/reference/constants/buffer_clear_color/
 - https://shaders.properties/current/reference/constants/colortex_mipmaps/
 - https://shaders.properties/current/reference/constants/shadow_mipmaps/
+- https://shaders.properties/current/reference/uniforms/overview/
+- https://shaders.properties/current/reference/attributes/overview/
+- https://shaders.properties/current/reference/macros/supported_extensions/
+- https://shaders.properties/current/reference/miscellaneous/patcher/
+- https://shaders.properties/current/reference/miscellaneous/debugging_shaders/
+- https://shaders.properties/current/reference/miscellaneous/macos/
 - https://github.com/IrisShaders/Iris
 - https://github.com/IrisShaders/docs
 - https://github.com/IrisShaders/ShaderDoc
@@ -49,9 +62,10 @@ Reviewed on `2026-07-29` UTC:
 | `IRIS-GL-002` | Tessellation shaders | EXPERIMENTAL | Gbuffers-style only, triangles only, `TESSELLATION_SHADERS` required. | Optional HIGH/ULTRA path with vertex/fragment fallback. | Minimal paired `.tcs`/`.tes` fixture and fallback test. | `IRIS-002`, `PROFILE-003`, `PROFILE-004` |
 | `IRIS-GL-003` | Geometry shaders | SOPORTADA | Optional for gbuffers and composite-style programs. | Optional bounded amplification; omission is the deterministic fallback. | Compile/link fixture and amplification budget. | `IRIS-002`, `SAFE-001` |
 | `IRIS-GL-004` | SSBO, images and indirect dispatch | EXPERIMENTAL | Feature flags and properties exist, but exact release/hardware acceptance is not locked. | Never required by SAFE; resource budgets required before adoption. | Binding, lifetime, dispatch and memory fixtures. | `IRIS-006`, `GI-002`, `SAFE-002` |
-| `IRIS-BUFFER-001` | Color attachment lifecycle | PARCIAL | Iris exposes at least 16 `colortex` attachments; defaults are display-sized RGBA, configurable for format, clear, size and flip. Resized attachments cannot be gbuffers outputs. | SAFE requires only indices 0–7, default-compatible formats and no resized gbuffers targets. | Machine-readable lifecycle contract, regression tests and later runtime framebuffer validation. | `IRIS-003`, `PIPE-005`, `PROFILE-001` |
-| `IRIS-BUFFER-002` | Depth attachment lifecycle | SOPORTADA | `depthtex0`–`2` are display-sized, non-flipping, fixed-clear depth buffers with progressively narrower geometry coverage. | Treat precision as driver-dependent; never persist or resize depth attachments. | Static contract plus later depth coverage fixture. | `IRIS-003`, `TEMP-001`, `QA-003` |
-| `IRIS-BUFFER-003` | Shadow depth lifecycle | PARCIAL | `shadowtex0`–`1` use shadow resolution, fixed clear, no flipping and optional mipmaps/hardware comparison. | SAFE cannot depend on hardware comparison or shadowcolor mipmaps. | Static contract plus shadow pass framebuffer fixture. | `IRIS-003`, `SHADOW-001`, `PROFILE-001` |
+| `IRIS-GL-005` | Terminal OpenGL compile/link/render harness | PARCIAL | Iris documents program families, stages, buffers, outputs and GL limits. Iris Patcher transforms source before GPU compilation, so standalone validation is necessary but not equivalent to client acceptance. | `focal-gl` must provide real-context compile/link/render/readback evidence. Unsupported capabilities return factual `UNSUPPORTED` or use an accepted fallback. No full Iris compatibility claim without patched-source and client evidence. | Run `probe`, compile/link gbuffers/composite/final fixtures, execute framebuffer render/readback, detect GL errors and NaN/Inf, verify determinism, then separately exercise patched output and locked client. | `QA-003`, `GLCLI-001`–`GLCLI-008`, `INT-001` |
+| `IRIS-BUFFER-001` | Color attachment lifecycle | PARCIAL | Iris exposes at least 16 `colortex` attachments; defaults are display-sized RGBA, configurable for format, clear, size and flip. Resized attachments cannot be gbuffers outputs. | SAFE requires only indices 0–7, default-compatible formats and no resized gbuffers targets. | Machine-readable lifecycle contract plus `focal-gl` framebuffer validation. | `IRIS-003`, `PIPE-005`, `PROFILE-001`, `GLCLI-005` |
+| `IRIS-BUFFER-002` | Depth attachment lifecycle | SOPORTADA | `depthtex0`–`2` are display-sized, non-flipping, fixed-clear depth buffers with progressively narrower geometry coverage. | Treat precision as driver-dependent; never persist or resize depth attachments. | Static contract plus depth coverage and readback fixture. | `IRIS-003`, `TEMP-001`, `GLCLI-005` |
+| `IRIS-BUFFER-003` | Shadow depth lifecycle | PARCIAL | `shadowtex0`–`1` use shadow resolution, fixed clear, no flipping and optional mipmaps/hardware comparison. | SAFE cannot depend on hardware comparison or shadowcolor mipmaps. | Static contract plus shadow pass framebuffer fixture. | `IRIS-003`, `SHADOW-001`, `PROFILE-001`, `GLCLI-006` |
 
 ## Program execution order
 
@@ -111,6 +125,49 @@ The authoritative machine-readable contract is `spec/iris-buffer-lifecycle.json`
 - Documented shadowcolor mipmap directives are currently unreliable; no Focal profile may depend on them.
 - Hardware shadow comparison is optional. Separate raw and comparison samplers require `SEPARATE_HARDWARE_SAMPLERS`.
 
+## Terminal OpenGL runtime evidence
+
+The canonical command surface is:
+
+```text
+focal-gl probe
+focal-gl compile
+focal-gl render
+focal-gl suite
+```
+
+Every result must declare one evidence level:
+
+1. `STATIC`;
+2. `GL_COMPILE_LINK`;
+3. `GL_RENDER_READBACK`;
+4. `IRIS_PATCHED`;
+5. `IRIS_CLIENT`.
+
+The JSON result must record harness version, shader-pack hash, command, fixture, program, profile, dimension, `sourceMode`, context backend, vendor, renderer, OpenGL/GLSL versions, extensions, limits, stages, link status, attachments, draw or dispatch count, GL errors, debug messages, readback statistics, NaN/Inf count, invariant results, timings, artifacts and exit code.
+
+Minimum runtime sequence before `QA-003` can complete:
+
+1. create a real offscreen context and report capabilities;
+2. compile/link one gbuffers-style vertex/fragment program;
+3. compile/link one composite-style program;
+4. create color/depth framebuffer attachments;
+5. render deterministic geometry;
+6. execute a composite pass;
+7. execute a final-equivalent pass;
+8. read color/depth and validate finite values and expected ranges;
+9. repeat to verify determinism;
+10. execute in an isolated worker with watchdog;
+11. run the SAFE subset on Mesa software in CI.
+
+Standalone limits:
+
+- source accepted by a driver may still be transformed differently by Iris;
+- uniforms, attributes and render states may be fixture approximations rather than live Minecraft values;
+- software Mesa evidence does not establish vendor performance;
+- one vendor GPU result does not establish universal compatibility;
+- integration claims require `IRIS_PATCHED` and `IRIS_CLIENT` evidence where applicable.
+
 ## Gbuffers inventory status
 
 Current program-name acceptance and vertex/fragment pair validation are implemented by `tools/shader_inventory.py` and `tests/test_shader_inventory.py`. Existing files are foundation evidence, not runtime acceptance. Unsupported `gbuffers_entities_glowing` must not be added; supported render-state data or the documented entity fallback must be used.
@@ -121,6 +178,6 @@ Current documentation confirms feature flags, program ordering, custom uniforms,
 
 ## Acceptance and next work
 
-`IRIS-001` and `IRIS-002` are complete through their machine-readable contracts, regression tests and synchronized roadmap evidence. `IRIS-003` is complete only when the buffer lifecycle contract, tests, this matrix update and the synchronized roadmap are merged with green Validation. Runtime framebuffer acceptance remains assigned to `QA-003` and client integration items.
+`IRIS-001`, `IRIS-002` and `IRIS-003` are complete at their current `STATIC` evidence level through machine-readable contracts, regression tests and synchronized roadmap evidence. Runtime acceptance remains assigned to `GLCLI-004`, `GLCLI-005`, `GLCLI-006` and client integration.
 
-Next unit after `IRIS-003`: `IRIS-004` — define and validate constants and output directives including `RENDERTARGETS`, legacy `DRAWBUFFERS`, formats, clears and blend behavior.
+Next prioritized unit: `GLCLI-001` — create the stable `focal-gl` CLI contract, followed by real context probing and the minimum compile-link-render-readback path. `IRIS-004` remains the next Iris-format contract and may proceed only when it does not delay the harness foundation.
