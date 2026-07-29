@@ -1,9 +1,9 @@
 name: Bootstrap Restore Output Directive Evidence
 
 on:
-  push:
-    branches:
-      - docs/feature-roadmap-opengl-harness-v2
+  pull_request:
+    paths:
+      - ".github/workflows/bootstrap-restore-output-contract.yml"
   workflow_dispatch:
 
 permissions:
@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   restore:
-    if: github.repository == 'krestosa/Focal'
+    if: github.repository == 'krestosa/Focal' && github.head_ref == 'docs/feature-roadmap-opengl-harness-v2'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
