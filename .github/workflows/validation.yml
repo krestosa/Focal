@@ -73,3 +73,52 @@ jobs:
         env:
           PYTHONPATH: .
         run: python -m unittest discover -v tests
+
+  mesa-egl-probe:
+    name: Mesa EGL software probe
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      EGL_PLATFORM: surfaceless
+      LIBGL_ALWAYS_SOFTWARE: "true"
+      MESA_LOADER_DRIVER_OVERRIDE: llvmpipe
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Install Mesa EGL runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            libegl1 \
+            libgl1 \
+            libgl1-mesa-dri \
+            mesa-utils
+
+      - name: Run real Mesa EGL probe
+        run: |
+          python tools/focal_gl.py probe \
+            --backend egl \
+            --gl-version 3.3 \
+            --gl-profile core \
+            --size 64x64 \
+            --json > focal-gl-probe.json
+
+      - name: Validate probe evidence
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path("focal-gl-probe.json").read_text(encoding="utf-8"))
+          assert result["outcome"] == "PASS", result
+          assert result["exitCode"] == 0, result
+          assert result["evidenceLevel"] == "STATIC", result
+          context = result["context"]
+          assert context["backend"].startswith("egl"), context
+          assert context["vendor"], context
+          assert context["renderer"], context
+          assert context["version"], context
+          assert context["glslVersion"], context
+          assert context["limits"], context
+          print(json.dumps(result, indent=2, sort_keys=True))
