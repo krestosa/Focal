@@ -5,11 +5,12 @@ Canonical capability evidence for Focal. This document is linked to [`ROADMAP.md
 ## Audit metadata
 
 - Reviewed UTC: `2026-07-29`
-- Focal baseline: `a58eed1bdaa74e684c8f399f0cd6e29f08c5c8c0`
+- Focal baseline: `96da7b6b4d5c081e4fd3df06f09891825f3c4b07`
 - Machine-readable stage contract: [`../spec/iris-stage-capabilities.json`](../spec/iris-stage-capabilities.json)
 - Machine-readable buffer lifecycle contract: [`../spec/iris-buffer-lifecycle.json`](../spec/iris-buffer-lifecycle.json)
 - Machine-readable output-directive contract: [`../spec/iris-output-directives.json`](../spec/iris-output-directives.json)
 - Terminal OpenGL harness contract: [`OPENGL-RUNTIME-HARNESS.md`](OPENGL-RUNTIME-HARNESS.md)
+- Merged EGL probe evidence: [`evidence/GLCLI-002-EGL-PROBE.md`](evidence/GLCLI-002-EGL-PROBE.md)
 - Version rule: exact Minecraft, Iris, Sodium, Fabric Loader and Java versions remain `PENDIENTE DE VERIFICAR` until a mutually compatible release set is pinned and exercised.
 
 ## Status vocabulary
@@ -63,7 +64,7 @@ Reviewed on `2026-07-29` UTC:
 | `IRIS-GL-002` | Tessellation shaders | EXPERIMENTAL | Gbuffers-style only, triangles only, `TESSELLATION_SHADERS` required. | Optional HIGH/ULTRA path with vertex/fragment fallback. | Minimal paired `.tcs`/`.tes` fixture and fallback test. | `IRIS-002`, `PROFILE-003`, `PROFILE-004` |
 | `IRIS-GL-003` | Geometry shaders | SOPORTADA | Optional for gbuffers and composite-style programs. | Optional bounded amplification; omission is the deterministic fallback. | Compile/link fixture and amplification budget. | `IRIS-002`, `SAFE-001` |
 | `IRIS-GL-004` | SSBO, images and indirect dispatch | EXPERIMENTAL | Feature flags and properties exist, but exact release/hardware acceptance is not locked. | Never required by SAFE; resource budgets required before adoption. | Binding, lifetime, dispatch and memory fixtures. | `IRIS-006`, `GI-002`, `SAFE-002` |
-| `IRIS-GL-005` | Terminal OpenGL compile/link/render harness | PARCIAL | The stable `focal-gl` command contract is merged through PR #62 at `STATIC` evidence. Iris documents program families, stages, buffers, outputs and GL limits, while Iris Patcher transforms source before GPU compilation; real-context and client validation remain outstanding. | Preserve the merged CLI and add real-context compile/link/render/readback. Unsupported capabilities return factual `UNSUPPORTED` or use an accepted fallback. No full Iris compatibility claim without patched-source and client evidence. | Continue with `GLCLI-002`, then compile/link gbuffers/composite/final fixtures, framebuffer render/readback, GL error and NaN/Inf checks, determinism, patched output and locked client. | `QA-003`, `GLCLI-001`–`GLCLI-008`, `INT-001` |
+| `IRIS-GL-005` | Terminal OpenGL compile/link/render harness | PARCIAL | The stable `focal-gl` command contract is merged through PR #62. PR #71 then merged a real EGL surfaceless/default-display pbuffer context probe at feature head `53aa34ec686a79bbc9991ceff9816735d8424b2e`; Validation run `30480734608` succeeded and merge `d466d6bca8d4e6ad2bfc40d94bc0338c54bf0895` is on `main`. The probe reports EGL, vendor, renderer, GL/GLSL, requested profile, selected extensions/limits and factual unsupported reasons. Canonical evidence remains `STATIC` because no shader stage was compiled or linked. | Preserve the real EGL route and factual `UNSUPPORTED` behavior. Do not claim `GL_COMPILE_LINK`, render/readback, patched-source or client acceptance. Hidden-window and platform routes, robust extension enumeration and explicit Mesa CI remain required. | Finish `GLCLI-002`; then compile/link gbuffers/composite/final fixtures, framebuffer render/readback, GL error and NaN/Inf checks, determinism, patched output and locked client. | `QA-003`, `GLCLI-001`–`GLCLI-008`, `INT-001` |
 | `IRIS-BUFFER-001` | Color attachment lifecycle | PARCIAL | Iris exposes at least 16 `colortex` attachments; defaults are display-sized RGBA, configurable for format, clear, size and flip. Resized attachments cannot be gbuffers outputs. | SAFE requires only indices 0–7, default-compatible formats and no resized gbuffers targets. | Machine-readable lifecycle contract plus `focal-gl` framebuffer validation. | `IRIS-003`, `PIPE-005`, `PROFILE-001`, `GLCLI-005` |
 | `IRIS-BUFFER-002` | Depth attachment lifecycle | SOPORTADA | `depthtex0`–`2` are display-sized, non-flipping, fixed-clear depth buffers with progressively narrower geometry coverage. | Treat precision as driver-dependent; never persist or resize depth attachments. | Static contract plus depth coverage and readback fixture. | `IRIS-003`, `TEMP-001`, `GLCLI-005` |
 | `IRIS-BUFFER-003` | Shadow depth lifecycle | PARCIAL | `shadowtex0`–`1` use shadow resolution, fixed clear, no flipping and optional mipmaps/hardware comparison. | SAFE cannot depend on hardware comparison or shadowcolor mipmaps. | Static contract plus shadow pass framebuffer fixture. | `IRIS-003`, `SHADOW-001`, `PROFILE-001`, `GLCLI-006` |
@@ -161,6 +162,8 @@ Every result must declare one evidence level:
 
 The JSON result must record harness version, shader-pack hash, command, fixture, program, profile, dimension, `sourceMode`, context backend, vendor, renderer, OpenGL/GLSL versions, extensions, limits, stages, link status, attachments, draw or dispatch count, GL errors, debug messages, readback statistics, NaN/Inf count, invariant results, timings, artifacts and exit code.
 
+Merged `GLCLI-002` evidence currently establishes only that the implementation can create and interrogate a real EGL context on a supported route. It does not raise the canonical evidence level above `STATIC`, because no shader stage or complete program was compiled and linked.
+
 Minimum runtime sequence before `QA-003` can complete:
 
 1. create a real offscreen context and report capabilities;
@@ -193,6 +196,6 @@ Current documentation confirms feature flags, program ordering, custom uniforms,
 
 ## Acceptance and next work
 
-`IRIS-001`, `IRIS-002`, `IRIS-003`, `IRIS-004` and the `GLCLI-001` command contract are complete at their current `STATIC` evidence level through machine-readable contracts, regression tests, merged PR #62 and synchronized roadmap evidence. Runtime acceptance remains assigned to `GLCLI-002`, `GLCLI-004`, `GLCLI-005`, `GLCLI-006` and client integration.
+`IRIS-001`, `IRIS-002`, `IRIS-003`, `IRIS-004` and the `GLCLI-001` command contract are complete at their current `STATIC` evidence level. `GLCLI-002` is `EN PROGRESO`: the real EGL probe is merged and documented, while controlled hidden-window/platform routes, robust core-profile extension enumeration and an explicit Mesa software CI probe remain pending. No shader compile/link or render/readback acceptance has been claimed.
 
-Next prioritized unit: `GLCLI-002` — create a real offscreen context and capability probe, followed by the minimum compile-link-render-readback path. `IRIS-005` remains the next Iris-format contract and may proceed only when it does not delay the harness foundation.
+Next prioritized unit: finish the remaining `GLCLI-002` gates, then implement the minimum `GLCLI-004/005` compile-link-render-readback path. `IRIS-005` remains the next Iris-format contract and may proceed only when it does not delay the harness foundation.
