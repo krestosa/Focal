@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "reviewedUtc": "2026-07-29",
+  "source": "https://shaders.properties/current/reference/programs/overview/",
+  "stages": {
+    "vsh": {"state": "supported", "programFamilies": ["gbuffers", "composite"], "safe": true},
+    "fsh": {"state": "supported", "programFamilies": ["gbuffers", "composite"], "safe": true},
+    "gsh": {"state": "supported_optional", "programFamilies": ["gbuffers", "composite"], "safe": false, "fallback": "omit geometry stage"},
+    "csh": {"state": "partial", "programFamilies": ["setup", "composite"], "minimumOpenGL": "4.3", "macosOpenGL": false, "featureFlag": "COMPUTE_SHADERS", "safe": false, "fallback": "vertex-fragment or disabled pass"},
+    "tcs": {"state": "experimental", "programFamilies": ["gbuffers"], "primitive": "triangles", "featureFlag": "TESSELLATION_SHADERS", "safe": false, "fallback": "vertex-fragment path"},
+    "tes": {"state": "experimental", "programFamilies": ["gbuffers"], "primitive": "triangles", "featureFlag": "TESSELLATION_SHADERS", "safe": false, "fallback": "vertex-fragment path"}
+  },
+  "compute": {
+    "perPassFiles": 27,
+    "suffixes": ["", "_a", "_b", "_c", "_d", "_e", "_f", "_g", "_h", "_i", "_j", "_k", "_l", "_m", "_n", "_o", "_p", "_q", "_r", "_s", "_t", "_u", "_v", "_w", "_x", "_y", "_z"],
+    "executesBeforeGraphics": true,
+    "directColorAttachmentWrites": false
+  }
+}
