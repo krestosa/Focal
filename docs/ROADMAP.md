@@ -7,8 +7,8 @@ Maintain one evidence-based plan for completing Focal as a safe, scalable Iris s
 - Canonical Iris evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md)
 - Canonical terminal OpenGL harness contract: [`OPENGL-RUNTIME-HARNESS.md`](OPENGL-RUNTIME-HARNESS.md)
 - Audit UTC: `2026-07-29`
-- Baseline audited: `a58eed1bdaa74e684c8f399f0cd6e29f08c5c8c0`
-- Roadmap schema revision: `10`
+- Baseline audited: `96da7b6b4d5c081e4fd3df06f09891825f3c4b07`
+- Roadmap schema revision: `11`
 - Current stage: Phase 1 foundation, Iris contracts and terminal OpenGL runtime harness
 - Runtime rule: no shader, buffer, multipass, temporal or profile feature may claim runtime acceptance without the evidence level declared in its row.
 - Documentation rule: every feature row contains at least one direct official Iris documentation link, reviewed on `2026-07-29` UTC.
@@ -42,7 +42,7 @@ A checked item requires implementation on `main`, applicable tests, green releva
 | Sodium | 🟣 REVALIDAR | Pin the version required by the selected Iris release. | [Iris overview][iris-overview] |
 | Fabric Loader/API | 🟣 REVALIDAR | Pin compatible versions and hashes. | [Iris repository][iris-repo] |
 | Java | 🟣 REVALIDAR | Confirm the official runtime requirement. | [Iris repository][iris-repo] |
-| OpenGL/GLSL | 🟡 EN PROGRESO | Build `focal-gl`, exercise a real context and record renderer/version/extensions. | [Programs][iris-programs], [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] |
+| OpenGL/GLSL | 🟡 EN PROGRESO | The merged EGL probe reports a real context; complete alternate backends, robust extension enumeration and explicit Mesa CI evidence. | [Programs][iris-programs], [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] |
 | Drivers/hardware | ⚪ PENDIENTE | Establish Mesa software plus representative AMD, NVIDIA and Intel evidence. | [Debugging][iris-debug] |
 
 ## Feature-row contract
@@ -176,7 +176,7 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 | [ ] ⚪ `QA-002` | P0 | Unified `shadercheck` CLI orchestrates static, OpenGL and client-capable checks. | One command selects applicable layers and returns machine-readable summary. | [Debugging][iris-debug], [Patcher][iris-patcher] | Wrap `focal-gl` without hiding exit codes. |
 | [ ] ⚪ `QA-003` | P0 | Aggregate headless OpenGL acceptance gate. | `GLCLI-001` through `GLCLI-008` satisfy minimum compile/link/render/readback and safety contract. | [Programs][iris-programs], [Buffers][iris-buffers], [Final program][iris-final] | Cannot complete before all child gates. |
 | [x] 🟢 `GLCLI-001` | P0 | Stable terminal interface: `probe`, `compile`, `render`, `suite`, human output, `--json`, artifacts and versioned exit codes. | Merged PR #62 provides `focal-gl`, `tools/focal_gl.py` and subprocess regression tests; exit codes 0/2/3/4/5/6/7/8 are locked. Evidence level is `STATIC`; runtime context remains outside this unit. | [Programs][iris-programs], [Debugging][iris-debug] | Preserve contract; continue with `GLCLI-002`. |
-| [ ] ⚪ `GLCLI-002` | P0 | Real offscreen context creation and capability probe across EGL/hidden-window backends. | Reports vendor, renderer, GL/GLSL, profile, extensions, limits and unsupported reasons; Mesa CI context succeeds. | [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] | Depends on `GLCLI-001`; **next prioritized implementation unit**. |
+| [ ] 🟡 `GLCLI-002` | P0 | Real offscreen context creation and capability probe across EGL/hidden-window backends. | PR #71 merged an EGL surfaceless/default-display pbuffer probe at feature head `53aa34ec686a79bbc9991ceff9816735d8424b2e`; Validation run `30480734608` succeeded and evidence is recorded in [`docs/evidence/GLCLI-002-EGL-PROBE.md`](evidence/GLCLI-002-EGL-PROBE.md). It reports EGL, vendor, renderer, GL/GLSL, requested profile, selected extensions/limits and factual unsupported reasons. Evidence remains `STATIC` because no shader stage was compiled or linked. | [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] | Complete controlled hidden GLFW, WGL and CGL/NSOpenGL routes where supported; add robust core-profile extension enumeration and an explicit Mesa software probe gate in CI. |
 | [ ] ⚪ `GLCLI-003` | P0 | Source-mode adapter for original, preprocessed and Iris-patched GLSL. | Report records `sourceMode`; includes/defines resolve; patched output can be consumed without claiming client equivalence. | [Iris Patcher][iris-patcher], [Macros][iris-macros] | Depends on `IRIS-010`; source mode can start first. |
 | [ ] ⚪ `GLCLI-004` | P0 | Stage compilation and program link with complete diagnostics. | At least one gbuffers-style, one composite-style and one final-equivalent program compile/link in real context; negative fixtures classify stage/link failures. | [Programs][iris-programs], [Gbuffers programs][iris-gbuffers], [Final program][iris-final] | Depends on `GLCLI-002/003`, `IRIS-002`. |
 | [ ] ⚪ `GLCLI-005` | P0 | Offscreen framebuffer render and color/depth readback. | Creates geometry/fullscreen inputs, attachments and samplers; draw succeeds; framebuffer is complete; pixels are finite and match invariants. | [Buffers][iris-buffers], [ColorTex][iris-colortex], [RENDERTARGETS][iris-rendertargets], [Final program][iris-final] | Depends on `GLCLI-004`, `IRIS-003/004`. |
@@ -212,7 +212,7 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 
 ## Ordering, risks and fallbacks
 
-1. Start `GLCLI-002` immediately; build context probe and minimum compile/link/render/readback before advanced visual work.
+1. Finish the remaining `GLCLI-002` backend, extension-enumeration and Mesa CI acceptance; then implement the minimum `GLCLI-004/005` compile-link-render-readback path before advanced visual work.
 2. Continue Iris-format work only when it does not delay the harness foundation.
 3. Pin the version lock before client compatibility claims.
 4. Define HDR buffers and SAFE/BALANCED profiles before broad material and lighting expansion.
@@ -235,10 +235,11 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 - `2026-07-29` — Revision 8 accepted the merged output-directive contract and advanced Iris-format work to `IRIS-005`.
 - `2026-07-29` — Revision 9 expanded every roadmap feature with observable scope, acceptance/tests and direct Iris documentation; added the mandatory `focal-gl` OpenGL runtime harness family.
 - `2026-07-29` — Revision 10 reconciled merged PR #62, marked `GLCLI-001` complete at `STATIC` evidence and advanced the next unit to `GLCLI-002`.
+- `2026-07-29` — Revision 11 reconciled merged PR #71 and evidence PR #72, marked `GLCLI-002` `EN PROGRESO`, and retained the remaining backend, extension and Mesa CI gates without claiming compile/link evidence.
 
 ## Next prioritized unit
 
-`GLCLI-002 — Real offscreen context and capability probe`: create an actual OpenGL context through supported EGL or hidden-window backends, report vendor/renderer/version/GLSL/extensions/limits, distinguish unsupported capabilities factually and establish Mesa CI evidence. Follow with the minimum `GLCLI-004/005` compile-link-render-readback path.
+`GLCLI-002 — Complete offscreen context and capability probe acceptance`: add controlled hidden GLFW fallback, WGL and CGL/NSOpenGL routes where supported, robust core-profile extension enumeration and an explicit Mesa software probe in CI. Then continue with the minimum `GLCLI-004/005` compile-link-render-readback path.
 
 ## Official Iris documentation references
 
