@@ -5,9 +5,9 @@
 Maintain one evidence-based plan for completing Focal as a safe, scalable Iris shader pack. Work not represented here must be added before implementation.
 
 - Canonical Iris evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md)
-- Audit UTC: `2026-07-29T03:20:00Z`
-- Baseline audited: `4d09aa437ae2702e30659f02a10fc21fe2480cbc`
-- Roadmap schema revision: `5`
+- Audit UTC: `2026-07-29T03:27:00Z`
+- Baseline audited: `b4ee8fb1774efcdb0260337beee429129be2b974`
+- Roadmap schema revision: `6`
 - Current stage: Phase 1 foundation, capability contracts and static validation
 
 ## Status legend
@@ -51,7 +51,7 @@ A checked item requires implementation on `main`, applicable tests, green releva
 
 - [x] 🟢 COMPLETADO — `IRIS-001` Program inventory. Evidence: matrix, `tools/shader_inventory.py`, `tests/test_shader_inventory.py`, PR #53 and Validation run `30410900109`.
 - [x] 🟢 COMPLETADO — `IRIS-002` Stage inventory. Evidence: `spec/iris-stage-capabilities.json`, `tests/test_iris_stage_capabilities.py`, [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md) and PR #55. Acceptance covers vertex, fragment, geometry, compute and tessellation scope; feature flags; OpenGL 4.3 and macOS limits; 27-file compute bound; paired triangle tessellation; and deterministic SAFE fallbacks.
-- [ ] 🟡 EN PROGRESO — `IRIS-003` Buffer and attachment lifecycle. Branch `docs/iris-buffer-lifecycle-contract` defines and tests colortex, depth, shadow, history, formats, clear, mipmaps, viewport, scaling and ping-pong; merge and runtime framebuffer acceptance remain.
+- [x] 🟢 COMPLETADO — `IRIS-003` Buffer and attachment lifecycle. Evidence: `spec/iris-buffer-lifecycle.json`, `tests/test_iris_buffer_lifecycle.py`, [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md), PR #56 and Validation run `30419514264`. Acceptance covers portable colortex bounds, depth and shadow lifecycles, clears, formats, mipmap timing, viewport scaling, ping-pong, history preconditions and deterministic SAFE fallbacks; runtime framebuffer acceptance remains assigned to `QA-003`.
 - [ ] ⚪ PENDIENTE — `IRIS-004` Constants and directives including `DRAWBUFFERS`, `RENDERTARGETS`, formats, clears and blend.
 - [ ] ⚪ PENDIENTE — `IRIS-005` Uniforms, attributes, matrices, camera/world/time/weather/entity data and reserved names.
 - [ ] ⚪ PENDIENTE — `IRIS-006` Complete `shaders.properties` directive matrix, feature flags, resources, SSBO and dispatch.
@@ -167,7 +167,8 @@ A checked item requires implementation on `main`, applicable tests, green releva
 - `2026-07-29` — Revision 3 accepted the machine-readable shader inventory.
 - `2026-07-29` — Revision 4 accepted the stage capability contract, tests and canonical matrix update from PR #55.
 - `2026-07-29` — Revision 5 began the buffer lifecycle contract with primary-source evidence and static regression coverage.
+- `2026-07-29` — Revision 6 accepted the buffer lifecycle contract, tests and matrix update from PR #56 and advanced the next unit to `IRIS-004`.
 
 ## Next prioritized unit
 
-Complete `IRIS-003 — Buffer and attachment lifecycle contract`, merge the specification and tests with green Validation, then reconcile its evidence on `main` before selecting `IRIS-004`.
+`IRIS-004 — Constants and output directives`: define and machine-check `RENDERTARGETS`, legacy `DRAWBUFFERS`, buffer formats, clears, clear colors and blend behavior, including output initialization and SAFE fallbacks.
