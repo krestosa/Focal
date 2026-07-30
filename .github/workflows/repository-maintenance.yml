@@ -1,10 +1,22 @@
 name: Repository Maintenance
 
 on:
+  issues:
+    types: [edited]
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
     inputs:
+      scope:
+        description: Maintenance scope
+        required: true
+        default: all
+        type: choice
+        options:
+          - branches
+          - garbage
+          - temporary_workflows
+          - all
       dry_run:
         description: Report cleanup candidates without mutating the repository
         required: false
@@ -13,7 +25,7 @@ on:
 
 permissions:
   contents: write
-  issues: read
+  issues: write
   pull-requests: read
 
 concurrency:
@@ -22,6 +34,7 @@ concurrency:
 
 jobs:
   maintain:
+    if: github.event_name != 'issues' || github.event.issue.number == 101
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -30,15 +43,27 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Remove only allowlisted repository garbage
+      - name: Run scoped repository maintenance
         env:
           GITHUB_TOKEN: ${{ github.token }}
           PYTHONPATH: .
+          DISPATCH_SCOPE: ${{ inputs.scope }}
           DISPATCH_DRY_RUN: ${{ inputs.dry_run }}
         shell: bash
         run: |
-          args=(--repository "$GITHUB_REPOSITORY" --issue 7 --require-idle)
-          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$DISPATCH_DRY_RUN" == "true" ]]; then
-            args+=(--dry-run)
-          fi
+          args=(--repository "$GITHUB_REPOSITORY" --state-issue 7 --require-idle)
+          case "$GITHUB_EVENT_NAME" in
+            issues)
+              args+=(--from-issue --command-issue 101)
+              ;;
+            workflow_dispatch)
+              args+=(--scope "$DISPATCH_SCOPE" --command-id "workflow-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}")
+              if [[ "$DISPATCH_DRY_RUN" == "true" ]]; then
+                args+=(--dry-run)
+              fi
+              ;;
+            schedule)
+              args+=(--scope all --command-id "schedule-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}")
+              ;;
+          esac
           python -m tools.repository_maintenance "${args[@]}"
