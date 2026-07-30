@@ -2,7 +2,7 @@
 """Permanent, scoped repository maintenance for Focal.
 
 Administrative cleanup is intentionally separate from ``FOCAL_CYCLE``. It may be
-requested through the existing issue command ingress or invoked by the permanent
+requested through the dedicated maintenance issue or invoked by the permanent
 workflow. A maintenance execution can delete branches or allowlisted files, but it
 must never create a branch, pull request, or workflow.
 """
@@ -20,9 +20,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 from tools.automation_state_v4 import StateStore, _issue_snapshot, mirror_state
-from tools.stale_lease_watchdog import GitHubApi, now_iso
+from tools.stale_lease_watchdog import GitHubApi, extract_block, now_iso
 
 TEMPORARY_WORKFLOW_MARKER = "# focal-temporary-workflow: true"
+MAINTENANCE_COMMAND_START = "<!-- focal-repository-maintenance:v1 -->"
+MAINTENANCE_COMMAND_END = "<!-- /focal-repository-maintenance -->"
+MAINTENANCE_ISSUE_TITLE = "[automation-maintenance] Focal repository maintenance"
 MAINTENANCE_OPERATION = "repository_maintenance"
 VALID_SCOPES = ("branches", "garbage", "temporary_workflows", "all")
 PROCESSED_MAINTENANCE_LIMIT = 64
@@ -53,7 +56,7 @@ def api_pages(api: GitHubApi, path: str) -> list[dict[str, Any]]:
 
 def validate_scope(scope: str) -> str:
     if scope not in VALID_SCOPES:
-        raise ValueError(f"invalid maintenance scope: {scope}")
+        raise ValueError(f"MAINTENANCE_SCOPE_INVALID: {scope}")
     return scope
 
 
@@ -162,6 +165,8 @@ def _guard_mutation(method: str, path: str, payload: Any = None) -> None:
         raise RuntimeError("MAINTENANCE_CREATED_REF: branch creation is forbidden")
     if "/pulls" in path:
         raise RuntimeError("MAINTENANCE_CREATED_PR: pull-request mutation is forbidden")
+    if "/contents/.github/workflows/" in path:
+        raise RuntimeError("MAINTENANCE_CREATED_WORKFLOW: workflow content mutation is forbidden")
     if method == "POST" and path.endswith("/git/trees"):
         tree_entries = (payload or {}).get("tree") if isinstance(payload, dict) else None
         if not isinstance(tree_entries, list):
@@ -236,11 +241,17 @@ def _maintenance_request_from_issue(
     repository: str,
     issue_number: int,
 ) -> dict[str, Any] | None:
-    command, _ = _issue_snapshot(api, repository, issue_number)
-    if command.get("operation") != MAINTENANCE_OPERATION:
+    issue = api.request("GET", f"/repos/{repository}/issues/{issue_number}")
+    if not isinstance(issue, dict) or issue.get("title") != MAINTENANCE_ISSUE_TITLE:
+        raise ValueError("maintenance issue title mismatch")
+    body = issue.get("body") or ""
+    command, _, _ = extract_block(body, MAINTENANCE_COMMAND_START, MAINTENANCE_COMMAND_END)
+    if command.get("operation") == "idle":
         return None
-    if command.get("schemaVersion") != 3:
-        raise ValueError("maintenance command schemaVersion 3 is required")
+    if command.get("schemaVersion") != 1:
+        raise ValueError("maintenance command schemaVersion 1 is required")
+    if command.get("operation") != MAINTENANCE_OPERATION:
+        raise ValueError(f"unsupported maintenance operation: {command.get('operation')}")
     command_id = command.get("commandId")
     if not isinstance(command_id, str) or not command_id:
         raise ValueError("maintenance commandId is required")
@@ -267,16 +278,27 @@ def _require_existing_state_branch(api: GitHubApi, repository: str, state_branch
     api.request("GET", f"/repos/{repository}/git/ref/heads/{encoded}")
 
 
+def _state_is_idle(state: dict[str, Any]) -> bool:
+    return state.get("status") == "idle" and state.get("runId") is None
+
+
+def _state_mirror_matches(issue_state: dict[str, Any], stored_state: dict[str, Any]) -> bool:
+    return all(
+        issue_state.get(key) == stored_state.get(key)
+        for key in ("version", "status", "runId")
+    )
+
+
 def _record_maintenance(
     api: GitHubApi,
     store: StateStore,
     repository: str,
-    issue_number: int,
+    state_issue_number: int,
     summary: dict[str, Any],
     command_id: str | None,
 ) -> None:
     refreshed = store.read()
-    if refreshed.state.get("status") != "idle" or refreshed.state.get("runId") is not None:
+    if not _state_is_idle(refreshed.state):
         raise RuntimeError("ACTIVE_LEASE: maintenance result cannot be recorded")
     state = dict(refreshed.state)
     state["lastRepositoryMaintenanceAt"] = now_iso(datetime.now(timezone.utc))
@@ -288,7 +310,7 @@ def _record_maintenance(
     state["processedMaintenanceCommandIds"] = _bounded_maintenance_ids(state, command_id)
     state["version"] = int(state.get("version", 0)) + 1
     written = store.write(state, refreshed.blob_sha, message="Record repository maintenance")
-    mirror_state(api, repository, issue_number, written.state)
+    mirror_state(api, repository, state_issue_number, written.state)
 
 
 def run(args: argparse.Namespace) -> int:
@@ -304,7 +326,7 @@ def run(args: argparse.Namespace) -> int:
     scope = validate_scope(args.scope)
     dry_run = args.dry_run
     if args.from_issue:
-        request = _maintenance_request_from_issue(api, repository, args.issue)
+        request = _maintenance_request_from_issue(api, repository, args.command_issue)
         if request is None:
             print(json.dumps({"action": "skipped", "reason": "NO_MAINTENANCE_REQUEST"}, sort_keys=True))
             return 0
@@ -313,9 +335,13 @@ def run(args: argparse.Namespace) -> int:
         dry_run = request.get("dryRun", True)
 
     _require_existing_state_branch(api, repository, args.state_branch)
-    _, issue_state = _issue_snapshot(api, repository, args.issue)
+    _, issue_state = _issue_snapshot(api, repository, args.state_issue)
     store = StateStore(api, repository, branch=args.state_branch, path=args.state_path)
-    stored = store.read(bootstrap=issue_state)
+    stored = store.read()
+    if not _state_mirror_matches(issue_state, stored.state):
+        print(json.dumps({"action": "skipped", "reason": "STATE_MIRROR_MISMATCH"}, sort_keys=True))
+        return 0
+
     processed_ids = stored.state.get("processedMaintenanceCommandIds")
     if command_id and isinstance(processed_ids, list) and command_id in processed_ids:
         print(
@@ -325,9 +351,7 @@ def run(args: argparse.Namespace) -> int:
             )
         )
         return 0
-    if args.require_idle and not (
-        stored.state.get("status") == "idle" and stored.state.get("runId") is None
-    ):
+    if args.require_idle and (not _state_is_idle(stored.state) or not _state_is_idle(issue_state)):
         print(json.dumps({"action": "skipped", "reason": "ACTIVE_LEASE"}, sort_keys=True))
         return 0
 
@@ -425,7 +449,7 @@ def run(args: argparse.Namespace) -> int:
         summary["createdBranches"] = []
         summary["deletedBranches"] = []
 
-    _record_maintenance(api, store, repository, args.issue, summary, command_id)
+    _record_maintenance(api, store, repository, args.state_issue, summary, command_id)
     print(json.dumps(summary, sort_keys=True))
     return 0
 
@@ -433,7 +457,8 @@ def run(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository")
-    parser.add_argument("--issue", type=int, default=7)
+    parser.add_argument("--state-issue", "--issue", dest="state_issue", type=int, default=7)
+    parser.add_argument("--command-issue", type=int, default=101)
     parser.add_argument("--state-branch", default="automation/state-v4")
     parser.add_argument("--state-path", default=".focal/automation-state.json")
     parser.add_argument("--require-idle", action="store_true")
