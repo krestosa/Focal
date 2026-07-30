@@ -29,19 +29,17 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Validate and apply state command
+      - name: Apply command to transactional state
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           PYTHONPATH: .
           STATE_ISSUE_NUMBER: "7"
-        run: python -m tools.automation_state_coordinator --issue "$STATE_ISSUE_NUMBER"
+        run: python -m tools.automation_state_v4 --issue "$STATE_ISSUE_NUMBER"
 
-      - name: Reconcile expired lease after command processing
+      - name: Restore issue mirror from canonical state
+        if: always()
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: >-
-          python tools/stale_lease_watchdog.py
-          --repository "$GITHUB_REPOSITORY"
-          --issue 7
-          --expiry-grace-seconds 120
-          --activity-grace-seconds 900
+          GITHUB_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+          STATE_ISSUE_NUMBER: "7"
+        run: python -m tools.automation_state_v4 --issue "$STATE_ISSUE_NUMBER" --mirror-only
