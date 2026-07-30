@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 328,
+  "version": 329,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -103,11 +103,11 @@
   "functionalCheckpointSha": "27fd2b16a3472b5588a3a69e6aba6f93b345f80b",
   "terminalVerifiedAt": "2026-07-30T14:23:48.967191Z",
   "terminalVerifiedRunId": "aa60b184-cfc9-4eb0-9b72-289b08a25ed0",
-  "lastRepositoryMaintenanceAt": "2026-07-30T14:28:59.374680Z",
+  "lastRepositoryMaintenanceAt": "2026-07-30T14:30:00.068052Z",
   "lastRepositoryMaintenance": {
-    "action": "dry-run",
-    "scope": "branches",
-    "commandId": "8a0ad78e-c5de-4b04-aa85-4d33ff61df45",
+    "action": "completed",
+    "scope": "all",
+    "commandId": "schedule-30551969254-1",
     "garbagePaths": [],
     "branches": [
       "fix/repository-maintenance-intent-routing"
@@ -160,9 +160,12 @@
     ],
     "defaultBranchHeadBefore": "e579a9929c83483b855b886f98bd99e4d1e87129",
     "branchCountBefore": 12,
-    "branchCountAfter": 12,
+    "defaultBranchHeadAfter": "e579a9929c83483b855b886f98bd99e4d1e87129",
+    "branchCountAfter": 11,
     "createdBranches": [],
-    "deletedBranches": []
+    "deletedBranches": [
+      "fix/repository-maintenance-intent-routing"
+    ]
   },
   "reconciliation": {
     "status": "pending",
@@ -172,9 +175,10 @@
     "note": "PR #100 remains the canonical recoverable reconciliation checkpoint; no functional mutation was performed in this cycle",
     "recordedAt": "2026-07-30T14:22:28.227523Z"
   },
-  "lastRepositoryMaintenanceCommandId": "8a0ad78e-c5de-4b04-aa85-4d33ff61df45",
-  "lastRepositoryMaintenanceReason": "MAINTENANCE_DRY_RUN",
+  "lastRepositoryMaintenanceCommandId": "schedule-30551969254-1",
+  "lastRepositoryMaintenanceReason": "MAINTENANCE_COMPLETED",
   "processedMaintenanceCommandIds": [
-    "8a0ad78e-c5de-4b04-aa85-4d33ff61df45"
+    "8a0ad78e-c5de-4b04-aa85-4d33ff61df45",
+    "schedule-30551969254-1"
   ]
 }
