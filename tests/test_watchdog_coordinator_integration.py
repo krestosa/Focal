@@ -72,19 +72,19 @@ class CoordinatorWatchdogIntegrationTests(unittest.TestCase):
         self.assertTrue(decision.repair)
         self.assertEqual(decision.reason, "EXPIRED_LEASE_WITHOUT_ACTIVE_REMOTE_WORK")
 
-    def test_coordinator_workflow_runs_watchdog_after_command(self) -> None:
-        workflow = pathlib.Path(".github/workflows/automation-state.yml").read_text(
-            encoding="utf-8"
-        )
+    def test_coordinator_and_terminal_guard_are_independent_workflows(self) -> None:
+        coordinator_workflow = pathlib.Path(
+            ".github/workflows/automation-state.yml"
+        ).read_text(encoding="utf-8")
+        guard_workflow = pathlib.Path(
+            ".github/workflows/stale-lease-watchdog.yml"
+        ).read_text(encoding="utf-8")
 
-        coordinator_command = "python -m tools.automation_state_coordinator"
-        watchdog_command = "python tools/stale_lease_watchdog.py"
-        self.assertIn("actions: read", workflow)
-        self.assertIn(coordinator_command, workflow)
-        self.assertIn(watchdog_command, workflow)
-        self.assertLess(workflow.index(coordinator_command), workflow.index(watchdog_command))
-        self.assertIn("--expiry-grace-seconds 120", workflow)
-        self.assertIn("--activity-grace-seconds 900", workflow)
+        self.assertIn("python -m tools.automation_state_v4", coordinator_workflow)
+        self.assertNotIn("automation_terminal_guard", coordinator_workflow)
+        self.assertIn("python -m tools.automation_terminal_guard", guard_workflow)
+        self.assertIn("--expiry-grace-seconds 120", guard_workflow)
+        self.assertIn("--activity-grace-seconds 900", guard_workflow)
 
     def test_coordinator_and_watchdog_share_serialization_group(self) -> None:
         coordinator_workflow = pathlib.Path(

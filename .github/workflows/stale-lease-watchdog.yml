@@ -1,13 +1,13 @@
-name: Stale Lease Watchdog
+name: Automation Terminal Guard
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
   actions: read
-  contents: read
+  contents: write
   issues: write
   pull-requests: read
 
@@ -22,12 +22,15 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
 
-      - name: Release expired lease when remote work is inactive
+      - name: Release expired or hard-stopped lease
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
         run: >-
-          python tools/stale_lease_watchdog.py
+          python -m tools.automation_terminal_guard
           --repository "$GITHUB_REPOSITORY"
           --issue 7
           --expiry-grace-seconds 120

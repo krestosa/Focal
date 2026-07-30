@@ -203,10 +203,11 @@ class CommandTests(unittest.TestCase):
 
 
 class WorkflowContractTests(unittest.TestCase):
-    def test_workflow_uses_importable_module_without_sender_allowlist(self) -> None:
+    def test_workflow_uses_transactional_module_without_sender_allowlist(self) -> None:
         workflow = pathlib.Path(".github/workflows/automation-state.yml").read_text(encoding="utf-8")
         self.assertIn("PYTHONPATH: .", workflow)
-        self.assertIn("python -m tools.automation_state_coordinator", workflow)
+        self.assertIn("python -m tools.automation_state_v4", workflow)
+        self.assertIn("--mirror-only", workflow)
         self.assertNotIn("unauthorized sender", workflow)
         self.assertNotIn("sender not in", workflow)
 

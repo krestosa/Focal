@@ -1,0 +1,44 @@
+name: Repository Maintenance
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Report cleanup candidates without mutating the repository
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: focal-automation-state
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Remove only allowlisted repository garbage
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PYTHONPATH: .
+          DISPATCH_DRY_RUN: ${{ inputs.dry_run }}
+        shell: bash
+        run: |
+          args=(--repository "$GITHUB_REPOSITORY" --issue 7 --require-idle)
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && "$DISPATCH_DRY_RUN" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          python -m tools.repository_maintenance "${args[@]}"
