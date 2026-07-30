@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 322,
+  "version": 323,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -99,44 +99,11 @@
   "functionalCheckpointSha": "1859a330336b20296dfba69ae74cc0d7cbebe21d",
   "terminalVerifiedAt": null,
   "terminalVerifiedRunId": null,
-  "lastRepositoryMaintenanceAt": "2026-07-30T13:36:04.935189Z",
+  "lastRepositoryMaintenanceAt": "2026-07-30T13:36:40.610206Z",
   "lastRepositoryMaintenance": {
     "action": "completed",
     "garbagePaths": [],
-    "branches": [
-      "agent/harden-watchdog-concurrency",
-      "agent/repair-stale-lease-watchdog",
-      "docs/glcli-002-egl-evidence",
-      "docs/glcli-002-glfw-runtime-evidence",
-      "docs/glcli-002-mesa-ci-evidence",
-      "docs/glcli-005-reconciliation",
-      "docs/reconcile-glcli-001",
-      "docs/reconcile-glcli-002-core-extensions",
-      "docs/reconcile-glcli-002-evidence",
-      "docs/reconcile-glcli-002-glfw-probe",
-      "docs/reconcile-glcli-002-mesa-evidence",
-      "docs/reconcile-glcli-003",
-      "docs/reconcile-glcli-004",
-      "docs/reconcile-glfw-watchdog-evidence",
-      "docs/reconcile-gov-002-acceptance",
-      "docs/reconcile-roadmap-rev14",
-      "feature/focal-gl-egl-probe",
-      "feature/glcli-001-cli-contract",
-      "feature/glcli-002-core-extensions",
-      "feature/glcli-002-hidden-glfw-context",
-      "feature/glcli-002-mesa-ci-probe",
-      "feature/glcli-003-source-adapter",
-      "feature/glcli-004-compile-link",
-      "feature/glcli-005-render-readback",
-      "feature/markdown-only-resource-links",
-      "feature/readable-status-output",
-      "feature/status-callout-below-grid",
-      "fix/autonomy-control-plane-v4",
-      "repair/coordinator-provenance-resilience-copy",
-      "test/gov-002-acceptance-matrix",
-      "test/gov-002-invalid-identifiers",
-      "test/gov-002-ownership-malformed-fixtures"
-    ],
+    "branches": [],
     "skippedBranches": [
       {
         "branch": "agent/fix-automation-state-app-edits",
@@ -161,10 +128,6 @@
       {
         "branch": "main",
         "reason": "PROTECTED_CONTROL_BRANCH"
-      },
-      {
-        "branch": "maintenance/delete-behind-main-20260730-1023",
-        "reason": "UNMERGED_WORK_PRESERVED"
       },
       {
         "branch": "repair/coordinator-private-delivery",
