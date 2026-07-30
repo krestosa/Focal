@@ -44,6 +44,18 @@ class MalformedCommandFixtures(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "commandId is required"):
             coordinator.validate_contract(command, working_state(), REPOSITORY)
 
+    def test_empty_command_id_is_rejected(self) -> None:
+        command = {"schemaVersion": 3, "commandId": "", "operation": "inspect"}
+
+        with self.assertRaisesRegex(ValueError, "commandId is required"):
+            coordinator.validate_contract(command, working_state(), REPOSITORY)
+
+    def test_non_string_command_id_is_rejected(self) -> None:
+        command = {"schemaVersion": 3, "commandId": 123, "operation": "inspect"}
+
+        with self.assertRaisesRegex(ValueError, "commandId is required"):
+            coordinator.validate_contract(command, working_state(), REPOSITORY)
+
     def test_unknown_operation_is_rejected(self) -> None:
         command = {
             "schemaVersion": 3,
@@ -62,6 +74,28 @@ class MalformedCommandFixtures(unittest.TestCase):
         }
 
         with self.assertRaisesRegex(ValueError, "schemaVersion 3"):
+            coordinator.validate_contract(command, working_state(), REPOSITORY)
+
+    def test_mutating_commands_require_run_id(self) -> None:
+        for operation in ("acquire", "recover", "heartbeat", "release"):
+            command = {
+                "schemaVersion": 3,
+                "commandId": f"missing-run-{operation}",
+                "operation": operation,
+            }
+            with self.subTest(operation=operation):
+                with self.assertRaisesRegex(ValueError, "runId is required"):
+                    coordinator.validate_contract(command, working_state(), REPOSITORY)
+
+    def test_empty_run_id_is_rejected(self) -> None:
+        command = {
+            "schemaVersion": 3,
+            "commandId": "empty-run-id",
+            "operation": "heartbeat",
+            "runId": "",
+        }
+
+        with self.assertRaisesRegex(ValueError, "runId is required"):
             coordinator.validate_contract(command, working_state(), REPOSITORY)
 
 
