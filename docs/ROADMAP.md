@@ -7,8 +7,8 @@ Maintain one evidence-based plan for completing Focal as a safe, scalable Iris s
 - Canonical Iris evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md)
 - Canonical terminal OpenGL harness contract: [`OPENGL-RUNTIME-HARNESS.md`](OPENGL-RUNTIME-HARNESS.md)
 - Audit UTC: `2026-07-30`
-- Baseline audited: `cc243812bd225f7c26aa4fbae818c11c0f12e839`
-- Roadmap schema revision: `14`
+- Baseline audited: `955702f1b470288ec4d8a7ba3c4b323a5ec1b984`
+- Roadmap schema revision: `15`
 - Current stage: Phase 1 foundation, Iris contracts and terminal OpenGL runtime harness
 - Runtime rule: no shader, buffer, multipass, temporal or profile feature may claim runtime acceptance without the evidence level declared in its row.
 - Documentation rule: every feature row contains at least one direct official Iris documentation link, reviewed on `2026-07-30` UTC.
@@ -54,7 +54,7 @@ Each row below is a feature unit. `Acceptance / tests` names the observable comp
 | State / ID | Priority | Feature and observable scope | Acceptance / tests | Iris docs | Dependencies / next action |
 |---|---:|---|---|---|---|
 | [x] 🟢 `GOV-001` | P0 | Body-only lease coordinator prevents overlapping autonomous runs. | Issue #7 and `.github/workflows/automation-state.yml` on `main`; acquire/release evidence. | [Iris repository][iris-repo] | Preserve v3 state contract. |
-| [ ] 🟣 `GOV-002` | P0 | Regression suite for concurrency, stale recovery, ownership loss and malformed commands. | Automated fixtures cover two contenders, expired lease, invalid token and lost ownership; PR #81 added immediate stale-lease reconciliation coverage and PR #82 added shared serialization plus optimistic state-revalidation coverage. Full row acceptance still requires every listed fixture on the exact validation head. | [Iris repository][iris-repo] | Complete and verify the remaining isolated workflow fixtures. |
+| [x] 🟢 `GOV-002` | P0 | Regression suite for concurrency, stale recovery, ownership loss and malformed commands. | `tests/test_gov_002_acceptance.py` validates two contenders, expired inactive lease recovery, invalid command token and lost ownership on one exact head; PR #89 merged after Validation run `30519455484` succeeded. Supporting isolated fixtures from PRs #81, #82, #87 and #88 remain green in the same repository suite. | [Iris repository][iris-repo] | Preserve the aggregate acceptance matrix as coordinator and watchdog behavior evolves. |
 | [x] 🟢 `GOV-003` | P0 | Remote checkpoint discipline keeps recoverable branches, PRs and reports. | Existing autonomous cycles show remote checkpoints before timeout. | [Iris repository][iris-repo] | Preserve policy. |
 | [ ] ⚪ `GOV-004` | P1 | Branch and PR recovery audit classifies abandoned, active and merged work. | CLI/report lists remote branches and PR disposition without deleting active work. | [Iris repository][iris-repo] | Implement read-only audit then guarded cleanup. |
 
@@ -239,6 +239,7 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 - `2026-07-29` — Revision 12 reconciled the explicit Mesa llvmpipe probe from PR #74 and evidence PR #75, removed the satisfied Mesa CI gate from pending work, and retained `GLCLI-002` `EN PROGRESO` at `STATIC` evidence.
 - `2026-07-29` — Revision 13 reconciled PR #77 and Validation run `30493688616`, recorded robust indexed core-profile extension enumeration, and retained only hidden GLFW, WGL and CGL/NSOpenGL routes plus representative hardware evidence as pending `GLCLI-002` work.
 - `2026-07-30` — Revision 14 reconciled the controlled hidden GLFW route from PR #79, canonical evidence from PR #80 and watchdog/coordinator hardening from PR #81/#82 against baseline `cc243812bd225f7c26aa4fbae818c11c0f12e839`; `GLCLI-002` remains `EN PROGRESO` without compile/link or render/readback claims.
+- `2026-07-30` — Revision 15 reconciled the exact-head `GOV-002` acceptance matrix from PR #89 and successful Validation run `30519455484`, marking the coordinator regression contract complete at `STATIC` evidence.
 
 ## Next prioritized unit
 
