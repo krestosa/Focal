@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: write
   issues: write
   pull-requests: read
@@ -34,3 +35,13 @@ jobs:
           PYTHONPATH: .
           STATE_ISSUE_NUMBER: "7"
         run: python -m tools.automation_state_coordinator --issue "$STATE_ISSUE_NUMBER"
+
+      - name: Reconcile expired lease after command processing
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >-
+          python tools/stale_lease_watchdog.py
+          --repository "$GITHUB_REPOSITORY"
+          --issue 7
+          --expiry-grace-seconds 120
+          --activity-grace-seconds 900
