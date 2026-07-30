@@ -1,14 +1,14 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 319,
+  "version": 320,
   "status": "working",
   "mode": "normal",
-  "phase": "LOCK_ACQUISITION",
+  "phase": "REMOTE_STATE_AUDIT",
   "runId": "a56d151f-6ef3-49ab-8a85-e018a5f61b98",
   "startedAt": "2026-07-30T13:18:48.330127Z",
-  "heartbeatAt": "2026-07-30T13:18:48.330127Z",
-  "leaseExpiresAt": "2026-07-30T13:48:48.330127Z",
+  "heartbeatAt": "2026-07-30T13:20:16.237956Z",
+  "leaseExpiresAt": "2026-07-30T13:50:16.237956Z",
   "softStopAt": "2026-07-30T14:08:48.330127Z",
   "cleanupAt": "2026-07-30T14:13:48.330127Z",
   "hardKillAt": "2026-07-30T14:17:18.330127Z",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T13:12:00Z",
   "lastResult": "PASS",
   "lastRunId": "878990bb-ab4b-486f-a44f-b4c61ae13383",
-  "lastCommandId": "15f733da-5b7f-4be5-b69a-6d76c7c98d62",
+  "lastCommandId": "e8f259d7-dbad-4351-85d0-4be186b245df",
   "lastCommandAccepted": true,
-  "lastCommandReason": "LEASE_ACQUIRED",
-  "lastCommandProcessedAt": "2026-07-30T13:19:59.283370Z",
+  "lastCommandReason": "HEARTBEAT_ACCEPTED",
+  "lastCommandProcessedAt": "2026-07-30T13:21:18.420798Z",
   "note": null,
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -50,7 +50,8 @@
     "54e956e3-175f-4d42-a0ae-1249cedd3893",
     "0085073f-f5cb-459a-b787-5ec5c6cf054e",
     "79fe7ebc-add1-4361-9505-6616f1867a11",
-    "15f733da-5b7f-4be5-b69a-6d76c7c98d62"
+    "15f733da-5b7f-4be5-b69a-6d76c7c98d62",
+    "e8f259d7-dbad-4351-85d0-4be186b245df"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
@@ -62,12 +63,12 @@
       "processedAt": "2026-07-30T13:19:59.283370Z"
     },
     "REMOTE_STATE_AUDIT": {
-      "commandId": "ca297205-3754-4320-b21e-07f9d2d46656",
-      "checkpointSha": "d4323dfa55e6dbd746862b201127ae6663990438",
+      "commandId": "e8f259d7-dbad-4351-85d0-4be186b245df",
+      "checkpointSha": "76002458caa7527321fd5c23957eb3e34955640a",
       "workBranch": null,
       "workBranchHeadSha": null,
       "pullRequest": null,
-      "processedAt": "2026-07-30T12:32:54.065578Z"
+      "processedAt": "2026-07-30T13:21:18.420798Z"
     },
     "IMPLEMENTATION": {
       "commandId": "af3dc639-d862-45bc-b3e4-7a8dc064e9f4",
