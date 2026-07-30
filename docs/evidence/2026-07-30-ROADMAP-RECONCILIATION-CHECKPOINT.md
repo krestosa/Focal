@@ -22,24 +22,87 @@ Baseline inspected: `cc243812bd225f7c26aa4fbae818c11c0f12e839`.
 - PR #82 merged shared workflow serialization and optimistic state revalidation before watchdog writes.
 - Current `main` is `cc243812bd225f7c26aa4fbae818c11c0f12e839`.
 
-## Required canonical reconciliation
+## Exact canonical reconciliation contract
 
-The next documentation mutation must update `docs/ROADMAP.md` and `docs/IRIS-CAPABILITY-MATRIX.md` together:
+The next documentation mutation must update `docs/ROADMAP.md` and `docs/IRIS-CAPABILITY-MATRIX.md` in the same branch and PR. The following replacements are normative for that mutation.
 
-1. Set audit date to `2026-07-30` and baseline to `cc243812bd225f7c26aa4fbae818c11c0f12e839`.
-2. Add the GLFW evidence note to the canonical evidence lists.
-3. Update the OpenGL compatibility summary to state that EGL and controlled hidden GLFW are merged.
-4. Update `GLCLI-002` evidence with PR #79, PR #80, run `30500297439`, and the GLFW evidence path.
-5. Keep `GLCLI-002` as `🟡 EN PROGRESO`; remaining platform work is native WGL and CGL/NSOpenGL plus representative physical GPU evidence.
-6. Do not claim `GL_COMPILE_LINK` or `GL_RENDER_READBACK`; current evidence remains context/probe evidence only.
-7. Reconcile governance evidence for PR #81 and PR #82 without marking unrelated roadmap items complete unless their acceptance criteria are fully satisfied.
-8. Advance the next functional priority toward the minimum `GLCLI-004` compile/link path once the remaining `GLCLI-002` platform boundary is explicitly scoped.
+### `docs/ROADMAP.md`
 
-## Validation required before merge
+1. Set metadata to:
 
-- Roadmap runtime-contract tests.
-- Documentation-link and Markdown validation.
-- Matrix/roadmap cross-reference checks.
-- Full repository Validation workflow on the exact documentation head.
+```markdown
+- Audit UTC: `2026-07-30`
+- Baseline audited: `cc243812bd225f7c26aa4fbae818c11c0f12e839`
+- Roadmap schema revision: `14`
+```
 
-This checkpoint is intentionally non-canonical. It preserves the audit result remotely so a subsequent cycle can update both canonical documents atomically without repeating the remote reconstruction.
+2. Replace the OpenGL/GLSL compatibility row with:
+
+```markdown
+| OpenGL/GLSL | 🟡 EN PROGRESO | The merged EGL and controlled hidden-window GLFW probes report real contexts on Mesa llvmpipe, and PR #77 provides indexed core-profile extension enumeration; complete native WGL and CGL/NSOpenGL routes plus representative physical-GPU evidence. | [Programs][iris-programs], [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] |
+```
+
+3. Keep `GOV-002` as `🟣 REVALIDAR`. Append PR #81 and PR #82 as concrete regression evidence, but do not mark it complete until all acceptance fixtures in the row are proven by the exact validation head.
+
+4. Replace the `GLCLI-002` row with text that includes all existing EGL, Mesa and extension evidence plus:
+
+```markdown
+PR #79 merged the controlled hidden-window GLFW backend. PR #80 published [`docs/evidence/GLCLI-002-GLFW-CI-PROBE.md`](evidence/GLCLI-002-GLFW-CI-PROBE.md), recording validated head `12dc8e24f9339193743f2372b2b8e785ebc60aa7` and successful Validation run `30500297439`. The GLFW fixture created a real hidden context on Mesa llvmpipe under Xvfb and reported capabilities. Evidence remains context/probe evidence only: no shader stage was compiled or linked and no framebuffer render/readback was accepted.
+```
+
+5. Its remaining-action cell must be:
+
+```markdown
+Complete native WGL and CGL/NSOpenGL routes where supported and collect representative physical-GPU evidence; then advance to the minimum `GLCLI-003/004/005` source, compile/link and render/readback path.
+```
+
+6. Append audit revision 14:
+
+```markdown
+- `2026-07-30` — Revision 14 reconciled the controlled hidden GLFW route from PR #79, canonical evidence from PR #80 and watchdog/coordinator hardening from PR #81/#82 against baseline `cc243812bd225f7c26aa4fbae818c11c0f12e839`; `GLCLI-002` remains `EN PROGRESO` without compile/link or render/readback claims.
+```
+
+7. Replace the next prioritized unit with:
+
+```markdown
+`GLCLI-002 boundary completion and GLCLI-003/004 entry`: finish native WGL and CGL/NSOpenGL capability routes and representative physical-GPU evidence without blocking implementation of the source-mode adapter and minimum real-context compile/link fixtures. Do not begin visual shader features before the `GLCLI-004/005` minimum path is established.
+```
+
+### `docs/IRIS-CAPABILITY-MATRIX.md`
+
+1. Set metadata to:
+
+```markdown
+- Reviewed UTC: `2026-07-30`
+- Focal baseline: `cc243812bd225f7c26aa4fbae818c11c0f12e839`
+```
+
+2. Add this canonical evidence entry after the Mesa evidence entry:
+
+```markdown
+- Merged hidden GLFW probe evidence: [`evidence/GLCLI-002-GLFW-CI-PROBE.md`](evidence/GLCLI-002-GLFW-CI-PROBE.md)
+```
+
+3. Extend `IRIS-GL-005` factual evidence with PR #79, PR #80, validated head `12dc8e24f9339193743f2372b2b8e785ebc60aa7`, Validation run `30500297439`, and the explicit limitation that hidden GLFW under Xvfb/llvmpipe is not native WGL/CGL, physical-GPU, compile/link, render/readback, patched-source or client evidence.
+
+4. Keep `IRIS-GL-005` state `PARCIAL` and preserve the distinction among `STATIC`, `GL_COMPILE_LINK`, `GL_RENDER_READBACK`, `IRIS_PATCHED` and `IRIS_CLIENT`.
+
+## Evidence classification after reconciliation
+
+| Item | Required state | Highest established evidence | Explicitly not established |
+|---|---|---|---|
+| `GLCLI-002` | `🟡 EN PROGRESO` | Real EGL and hidden GLFW context/probe on Mesa llvmpipe | Native WGL/CGL, representative physical GPU, compile/link, render/readback, Iris Patcher, Iris client |
+| `IRIS-GL-005` | `PARCIAL` | Real context creation and capability reporting on documented software routes | Universal driver compatibility or shader runtime acceptance |
+| `GOV-002` | `🟣 REVALIDAR` | Additional stale-lease and race-regression coverage from PR #81/#82 | Full row acceptance unless every listed fixture is confirmed |
+
+## Validation required before canonical merge
+
+- `python -m unittest tests.test_roadmap_runtime_contract`
+- roadmap/matrix cross-reference and evidence-path checks
+- Markdown and link validation applicable in the repository
+- full `Validation` workflow on the exact head
+- diff review confirming no status was elevated beyond observed evidence
+
+## Continuation rule
+
+This file remains a non-canonical checkpoint. A following cycle must resume PR #83 rather than create a parallel branch, apply the two canonical document updates atomically, remove any obsolete checkpoint-only wording if appropriate, validate the exact head, merge only with green required checks, reconcile `main`, and release the lease.
