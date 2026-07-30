@@ -9,6 +9,7 @@ from tools.automation_state_summary import (
     COMMAND_START,
     STATE_END,
     STATE_START,
+    SUMMARY_END,
     has_single_managed_blocks,
     render_issue_body,
     render_summary,
@@ -16,7 +17,14 @@ from tools.automation_state_summary import (
 
 
 class AutomationStateSummaryTests(unittest.TestCase):
-    def test_idle_summary_places_result_and_checkpoint_first(self) -> None:
+    def assert_callout_below_grid(self, summary: str, marker: str) -> None:
+        last_row = summary.rfind("| **")
+        callout = summary.index(marker)
+        summary_end = summary.index(SUMMARY_END)
+        self.assertGreater(callout, last_row)
+        self.assertLess(callout, summary_end)
+
+    def test_idle_summary_places_result_checkpoint_and_tip_before_details(self) -> None:
         state = {
             "status": "idle",
             "mode": "normal",
@@ -31,8 +39,9 @@ class AutomationStateSummaryTests(unittest.TestCase):
         self.assertIn("✅ `PASS`", summary)
         self.assertIn("`cf02daaca6d5`", summary)
         self.assertIn("coordinador está libre", summary)
+        self.assert_callout_below_grid(summary, "> [!TIP]")
 
-    def test_working_summary_surfaces_remote_activity_and_lease(self) -> None:
+    def test_working_summary_surfaces_remote_activity_lease_and_callout_below_grid(self) -> None:
         state = {
             "status": "working",
             "mode": "normal",
@@ -50,6 +59,27 @@ class AutomationStateSummaryTests(unittest.TestCase):
         self.assertIn("🌐 Operación remota", summary)
         self.assertIn("2026-07-30T04:35:00Z", summary)
         self.assertIn("Reading remote state \\| safely", summary)
+        self.assert_callout_below_grid(summary, "> [!IMPORTANT]")
+
+    def test_recovery_and_unknown_callouts_are_below_their_grids(self) -> None:
+        recovery = render_summary(
+            {
+                "status": "working",
+                "mode": "recovery",
+                "phase": "RECOVERY",
+                "note": "Recovering coordinator state",
+            }
+        )
+        unknown = render_summary(
+            {
+                "status": "invalid",
+                "mode": "normal",
+                "phase": "unknown",
+                "note": "Invalid state",
+            }
+        )
+        self.assert_callout_below_grid(recovery, "> [!WARNING]")
+        self.assert_callout_below_grid(unknown, "> [!CAUTION]")
 
     def test_issue_layout_keeps_json_machine_readable_below_summary(self) -> None:
         command = {"schemaVersion": 3, "commandId": "cmd", "operation": "inspect"}
