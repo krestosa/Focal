@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import re
 from typing import Any
+from urllib.parse import quote
 
 SUMMARY_START = "<!-- focal-summary:v1 -->"
 SUMMARY_END = "<!-- /focal-summary -->"
@@ -20,6 +21,19 @@ RESULT_BADGES = {
     "BLOCKED": "🔴",
     "NO-OP": "⚪",
 }
+
+_REPOSITORY_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+_SHA_RE = re.compile(r"^[0-9a-fA-F]{7,40}$")
+_FULL_SHA_IN_TEXT_RE = re.compile(r"\b[0-9a-fA-F]{40}\b")
+_PR_IN_TEXT_RE = re.compile(r"\bPR\s+#(\d+)\b")
+_ISSUE_IN_TEXT_RE = re.compile(r"\bissue\s+#(\d+)\b", flags=re.IGNORECASE)
+_RUN_IN_TEXT_RE = re.compile(r"\b((?:Validation\s+)?run)\s+(\d+)\b", flags=re.IGNORECASE)
+_BRANCH_IN_TEXT_RE = re.compile(r"\b(branch|rama)\s+([A-Za-z0-9._/-]+)", flags=re.IGNORECASE)
+_FILE_IN_TEXT_RE = re.compile(
+    r"(?<![A-Za-z0-9_./-])"
+    r"((?:docs|tools|tests|scripts|shaderpacks?|prompts|\.github)/"
+    r"[A-Za-z0-9._/-]+\.(?:md|py|json|ya?ml|properties|fsh|vsh|glsl|txt))\b"
+)
 
 
 def _cell(value: Any, fallback: str = "—") -> str:
@@ -36,16 +50,135 @@ def _cell(value: Any, fallback: str = "—") -> str:
     )
 
 
-def _sha(value: Any) -> str:
+def _label(value: Any) -> str:
+    return _cell(value).replace("[", "\\[").replace("]", "\\]")
+
+
+def _link(label: Any, url: str) -> str:
+    return f"[{_label(label)}]({url})"
+
+
+def _repository(state: dict[str, Any]) -> str | None:
+    value = state.get("repository")
+    if isinstance(value, str) and _REPOSITORY_RE.fullmatch(value):
+        return value
+    return None
+
+
+def _repository_url(state: dict[str, Any], suffix: str) -> str | None:
+    repository = _repository(state)
+    if repository is None:
+        return None
+    return f"https://github.com/{repository}/{suffix.lstrip('/')}"
+
+
+def _commit(value: Any, state: dict[str, Any]) -> str:
     text = _cell(value)
     if text == "—":
         return text
-    return f"`{text[:12]}`"
+    url = _repository_url(state, f"commit/{quote(text, safe='')}")
+    label = f"`{text[:12]}`"
+    if url is None or not _SHA_RE.fullmatch(text):
+        return label
+    return _link(label, url)
+
+
+def _branch(state: dict[str, Any]) -> str:
+    value = state.get("workBranch")
+    text = _cell(value)
+    if text == "—":
+        return text
+    url = _repository_url(state, f"tree/{quote(text, safe='/-._')}")
+    label = f"`{text}`"
+    return _link(label, url) if url is not None else label
+
+
+def _pull_request(state: dict[str, Any]) -> str:
+    value = state.get("pullRequest")
+    if value is None or value == "":
+        return "—"
+    text = str(value)
+    if not text.isdigit():
+        return _cell(value)
+    url = _repository_url(state, f"pull/{text}")
+    label = f"PR #{text}"
+    return _link(label, url) if url is not None else label
+
+
+def _workflow(state: dict[str, Any]) -> str | None:
+    value = state.get("workflowPath")
+    if not isinstance(value, str) or not value:
+        return None
+    url = _repository_url(state, f"actions/workflows/{quote(value, safe='/-._')}")
+    return _link(f"`{value}`", url) if url is not None else f"`{_cell(value)}`"
+
+
+def _workflow_run(state: dict[str, Any]) -> str | None:
+    value = state.get("workflowRun")
+    if value is None or value == "":
+        return None
+    text = str(value)
+    if not text.isdigit():
+        return _cell(value)
+    url = _repository_url(state, f"actions/runs/{text}")
+    label = f"run {text}"
+    return _link(label, url) if url is not None else label
 
 
 def _result(value: Any) -> str:
     text = _cell(value)
     return f"{RESULT_BADGES.get(text, '⚪')} `{text}`"
+
+
+def _linkify_note(value: Any, state: dict[str, Any]) -> str:
+    text = _cell(value)
+    if text == "—" or _repository(state) is None:
+        return text
+
+    ref = state.get("checkpointSha") or state.get("workBranch") or "main"
+    ref_text = quote(str(ref), safe="/-._")
+
+    def link_sha(match: re.Match[str]) -> str:
+        sha = match.group(0)
+        url = _repository_url(state, f"commit/{sha}")
+        return _link(f"`{sha[:12]}`", url) if url is not None else f"`{sha[:12]}`"
+
+    def link_pr(match: re.Match[str]) -> str:
+        number = match.group(1)
+        url = _repository_url(state, f"pull/{number}")
+        return _link(f"PR #{number}", url) if url is not None else match.group(0)
+
+    def link_issue(match: re.Match[str]) -> str:
+        number = match.group(1)
+        url = _repository_url(state, f"issues/{number}")
+        return _link(f"issue #{number}", url) if url is not None else match.group(0)
+
+    def link_run(match: re.Match[str]) -> str:
+        prefix = match.group(1)
+        number = match.group(2)
+        url = _repository_url(state, f"actions/runs/{number}")
+        label = f"{prefix} {number}"
+        return _link(label, url) if url is not None else match.group(0)
+
+    def link_branch(match: re.Match[str]) -> str:
+        prefix = match.group(1)
+        branch = match.group(2)
+        url = _repository_url(state, f"tree/{quote(branch, safe='/-._')}")
+        label = f"{prefix} `{branch}`"
+        return _link(label, url) if url is not None else match.group(0)
+
+    def link_file(match: re.Match[str]) -> str:
+        path = match.group(1)
+        url = _repository_url(state, f"blob/{ref_text}/{quote(path, safe='/-._')}")
+        return _link(f"`{path}`", url) if url is not None else f"`{path}`"
+
+    text = _FULL_SHA_IN_TEXT_RE.sub(link_sha, text)
+    text = _PR_IN_TEXT_RE.sub(link_pr, text)
+    text = _ISSUE_IN_TEXT_RE.sub(link_issue, text)
+    text = _RUN_IN_TEXT_RE.sub(link_run, text)
+    text = _BRANCH_IN_TEXT_RE.sub(link_branch, text)
+    text = _FILE_IN_TEXT_RE.sub(link_file, text)
+    return text
 
 
 def _activity(state: dict[str, Any]) -> str:
@@ -96,8 +229,8 @@ def render_summary(state: dict[str, Any]) -> str:
                 ("Inicio", _cell(state.get("startedAt"))),
                 ("Último heartbeat", _cell(state.get("heartbeatAt"))),
                 ("Lease hasta", _cell(state.get("leaseExpiresAt"))),
-                ("Rama", f"`{_cell(state.get('workBranch'))}`"),
-                ("Pull request", _cell(state.get("pullRequest"))),
+                ("Rama", _branch(state)),
+                ("Pull request", _pull_request(state)),
             ]
         )
     else:
@@ -107,10 +240,18 @@ def render_summary(state: dict[str, Any]) -> str:
                 ("Última finalización", _cell(state.get("lastCompletedAt"))),
             ]
         )
+
+    workflow = _workflow(state)
+    if workflow is not None:
+        rows.append(("Workflow", workflow))
+    workflow_run = _workflow_run(state)
+    if workflow_run is not None:
+        rows.append(("Run", workflow_run))
+
     rows.extend(
         [
-            ("Checkpoint", _sha(state.get("checkpointSha"))),
-            ("Resumen", _cell(state.get("note"))),
+            ("Checkpoint", _commit(state.get("checkpointSha"), state)),
+            ("Resumen", _linkify_note(state.get("note"), state)),
         ]
     )
 
