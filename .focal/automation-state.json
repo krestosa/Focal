@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 334,
+  "version": 335,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -108,15 +108,13 @@
   "functionalCheckpointSha": "1859a330336b20296dfba69ae74cc0d7cbebe21d",
   "terminalVerifiedAt": "2026-07-30T15:25:11.180927Z",
   "terminalVerifiedRunId": "c6242ac5-17c7-48b8-8732-bcbd31717938",
-  "lastRepositoryMaintenanceAt": "2026-07-30T14:30:00.068052Z",
+  "lastRepositoryMaintenanceAt": "2026-07-30T19:49:50.762980Z",
   "lastRepositoryMaintenance": {
     "action": "completed",
     "scope": "all",
-    "commandId": "schedule-30551969254-1",
+    "commandId": "schedule-30576482878-1",
     "garbagePaths": [],
-    "branches": [
-      "fix/repository-maintenance-intent-routing"
-    ],
+    "branches": [],
     "skippedBranches": [
       {
         "branch": "agent/fix-automation-state-app-edits",
@@ -164,18 +162,17 @@
       }
     ],
     "defaultBranchHeadBefore": "e579a9929c83483b855b886f98bd99e4d1e87129",
-    "branchCountBefore": 12,
+    "branchCountBefore": 11,
     "defaultBranchHeadAfter": "e579a9929c83483b855b886f98bd99e4d1e87129",
     "branchCountAfter": 11,
     "createdBranches": [],
-    "deletedBranches": [
-      "fix/repository-maintenance-intent-routing"
-    ]
+    "deletedBranches": []
   },
-  "lastRepositoryMaintenanceCommandId": "schedule-30551969254-1",
+  "lastRepositoryMaintenanceCommandId": "schedule-30576482878-1",
   "lastRepositoryMaintenanceReason": "MAINTENANCE_COMPLETED",
   "processedMaintenanceCommandIds": [
     "8a0ad78e-c5de-4b04-aa85-4d33ff61df45",
-    "schedule-30551969254-1"
+    "schedule-30551969254-1",
+    "schedule-30576482878-1"
   ]
 }
