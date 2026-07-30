@@ -26,11 +26,7 @@ class SourceAdapterTests(unittest.TestCase):
     def test_source_mode_preserves_original_stage_and_hashes_it(self) -> None:
         original = "#version 330 core\nvoid main() {}\n"
         self.write("gbuffers_basic.vsh", original)
-        prepared = prepare_program(
-            pack=self.root,
-            program="gbuffers_basic",
-            source_mode="source",
-        )
+        prepared = prepare_program(pack=self.root, program="gbuffers_basic", source_mode="source")
         self.assertEqual(prepared.sourceMode, "source")
         self.assertFalse(prepared.includesResolved)
         self.assertEqual(prepared.stages[0].source, original)
@@ -40,14 +36,13 @@ class SourceAdapterTests(unittest.TestCase):
 
     def test_preprocessed_mode_resolves_relative_and_root_includes_and_defines(self) -> None:
         self.write("lib/common.glsl", "vec3 commonValue() { return vec3(1.0); }\n")
-        self.write("program/local.glsl", '#include <lib/common.glsl>\n')
+        self.write("local.glsl", '#include <lib/common.glsl>\n')
         self.write(
-            "program/example.vsh",
+            "example.vsh",
             '#version 330 core\n#include "local.glsl"\nvoid main() { gl_Position = vec4(commonValue(), 1.0); }\n',
         )
         prepared = prepare_program(
             pack=self.root,
-            source_root=self.shaders / "program",
             program="example",
             source_mode="preprocessed",
             define_values=("FOCAL_PROFILE=2", "FEATURE_ON"),
