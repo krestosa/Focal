@@ -1,31 +1,31 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 311,
+  "version": 312,
   "status": "working",
   "mode": "normal",
-  "phase": "IMPLEMENTATION",
+  "phase": "CI_VALIDATION",
   "runId": "878990bb-ab4b-486f-a44f-b4c61ae13383",
   "startedAt": "2026-07-30T12:29:01Z",
-  "heartbeatAt": "2026-07-30T12:42:00Z",
-  "leaseExpiresAt": "2026-07-30T13:12:00Z",
+  "heartbeatAt": "2026-07-30T12:50:30Z",
+  "leaseExpiresAt": "2026-07-30T13:17:30Z",
   "softStopAt": "2026-07-30T13:19:01Z",
   "cleanupAt": "2026-07-30T13:24:01Z",
   "hardKillAt": "2026-07-30T13:27:31Z",
   "deadlineAt": "2026-07-30T13:27:31Z",
   "baseMainSha": "b42fdec2ba857c58d56d2b718e5ccc4960951baa",
   "workBranch": "feature/glcli-005-render-readback",
-  "workBranchHeadSha": "b42fdec2ba857c58d56d2b718e5ccc4960951baa",
-  "pullRequest": null,
-  "checkpointSha": "b42fdec2ba857c58d56d2b718e5ccc4960951baa",
+  "workBranchHeadSha": "2c456de8bdf4ff693c0e59ea9cde0af673f0ee67",
+  "pullRequest": 97,
+  "checkpointSha": "2c456de8bdf4ff693c0e59ea9cde0af673f0ee67",
   "lastCompletedAt": "2026-07-30T08:19:42.011156Z",
   "lastResult": "PASS",
   "lastRunId": "9a349a86-05f3-4c87-9220-cd5bea11b35c",
-  "lastCommandId": "af3dc639-d862-45bc-b3e4-7a8dc064e9f4",
+  "lastCommandId": "36e6ad5f-dbf0-44b6-8e3e-a729a2327f7c",
   "lastCommandAccepted": true,
   "lastCommandReason": "HEARTBEAT_ACCEPTED",
-  "lastCommandProcessedAt": "2026-07-30T12:42:29.803940Z",
-  "note": "GLCLI-005 selected as the minimum framebuffer draw and color/depth readback increment",
+  "lastCommandProcessedAt": "2026-07-30T12:51:01.627245Z",
+  "note": "PR #97 opened for GLCLI-005 framebuffer render/readback; awaiting exact-head validation",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
   "lastAbandonedAt": "2026-07-30T01:06:56.223376Z",
@@ -42,7 +42,8 @@
     "82e2d863-3df1-4c5b-bf22-98bd5d9596cd",
     "cc00e5cd-288d-4571-a40f-f258ce28c1cf",
     "ca297205-3754-4320-b21e-07f9d2d46656",
-    "af3dc639-d862-45bc-b3e4-7a8dc064e9f4"
+    "af3dc639-d862-45bc-b3e4-7a8dc064e9f4",
+    "36e6ad5f-dbf0-44b6-8e3e-a729a2327f7c"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
@@ -68,6 +69,14 @@
       "workBranchHeadSha": "b42fdec2ba857c58d56d2b718e5ccc4960951baa",
       "pullRequest": null,
       "processedAt": "2026-07-30T12:42:29.803940Z"
+    },
+    "CI_VALIDATION": {
+      "commandId": "36e6ad5f-dbf0-44b6-8e3e-a729a2327f7c",
+      "checkpointSha": "2c456de8bdf4ff693c0e59ea9cde0af673f0ee67",
+      "workBranch": "feature/glcli-005-render-readback",
+      "workBranchHeadSha": "2c456de8bdf4ff693c0e59ea9cde0af673f0ee67",
+      "pullRequest": 97,
+      "processedAt": "2026-07-30T12:51:01.627245Z"
     }
   }
 }
