@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 321,
+  "version": 322,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -98,5 +98,96 @@
   },
   "functionalCheckpointSha": "1859a330336b20296dfba69ae74cc0d7cbebe21d",
   "terminalVerifiedAt": null,
-  "terminalVerifiedRunId": null
+  "terminalVerifiedRunId": null,
+  "lastRepositoryMaintenanceAt": "2026-07-30T13:36:04.935189Z",
+  "lastRepositoryMaintenance": {
+    "action": "completed",
+    "garbagePaths": [],
+    "branches": [
+      "agent/harden-watchdog-concurrency",
+      "agent/repair-stale-lease-watchdog",
+      "docs/glcli-002-egl-evidence",
+      "docs/glcli-002-glfw-runtime-evidence",
+      "docs/glcli-002-mesa-ci-evidence",
+      "docs/glcli-005-reconciliation",
+      "docs/reconcile-glcli-001",
+      "docs/reconcile-glcli-002-core-extensions",
+      "docs/reconcile-glcli-002-evidence",
+      "docs/reconcile-glcli-002-glfw-probe",
+      "docs/reconcile-glcli-002-mesa-evidence",
+      "docs/reconcile-glcli-003",
+      "docs/reconcile-glcli-004",
+      "docs/reconcile-glfw-watchdog-evidence",
+      "docs/reconcile-gov-002-acceptance",
+      "docs/reconcile-roadmap-rev14",
+      "feature/focal-gl-egl-probe",
+      "feature/glcli-001-cli-contract",
+      "feature/glcli-002-core-extensions",
+      "feature/glcli-002-hidden-glfw-context",
+      "feature/glcli-002-mesa-ci-probe",
+      "feature/glcli-003-source-adapter",
+      "feature/glcli-004-compile-link",
+      "feature/glcli-005-render-readback",
+      "feature/markdown-only-resource-links",
+      "feature/readable-status-output",
+      "feature/status-callout-below-grid",
+      "fix/autonomy-control-plane-v4",
+      "repair/coordinator-provenance-resilience-copy",
+      "test/gov-002-acceptance-matrix",
+      "test/gov-002-invalid-identifiers",
+      "test/gov-002-ownership-malformed-fixtures"
+    ],
+    "skippedBranches": [
+      {
+        "branch": "agent/fix-automation-state-app-edits",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      },
+      {
+        "branch": "agent/fix-coordinator-module-execution",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      },
+      {
+        "branch": "automation/state-v4",
+        "reason": "PROTECTED_CONTROL_BRANCH"
+      },
+      {
+        "branch": "docs/glcli-007-reconciliation",
+        "reason": "OPEN_PULL_REQUEST"
+      },
+      {
+        "branch": "feature/glcli-007-worker-isolation",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      },
+      {
+        "branch": "main",
+        "reason": "PROTECTED_CONTROL_BRANCH"
+      },
+      {
+        "branch": "maintenance/delete-behind-main-20260730-1023",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      },
+      {
+        "branch": "repair/coordinator-private-delivery",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      },
+      {
+        "branch": "repair/coordinator-provenance-resilience",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      },
+      {
+        "branch": "repair/coordinator-provenance-resilience-final",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      },
+      {
+        "branch": "repair/coordinator-provenance-resilience-pr",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      },
+      {
+        "branch": "repair/private-coordinator",
+        "reason": "UNMERGED_WORK_PRESERVED"
+      }
+    ],
+    "defaultBranchHeadBefore": "27fd2b16a3472b5588a3a69e6aba6f93b345f80b",
+    "defaultBranchHeadAfter": "27fd2b16a3472b5588a3a69e6aba6f93b345f80b"
+  }
 }
