@@ -34,7 +34,7 @@ concurrency:
 
 jobs:
   maintain:
-    if: github.event_name != 'issues' || github.event.issue.number == 7
+    if: github.event_name != 'issues' || github.event.issue.number == 101
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -51,10 +51,10 @@ jobs:
           DISPATCH_DRY_RUN: ${{ inputs.dry_run }}
         shell: bash
         run: |
-          args=(--repository "$GITHUB_REPOSITORY" --issue 7 --require-idle)
+          args=(--repository "$GITHUB_REPOSITORY" --state-issue 7 --require-idle)
           case "$GITHUB_EVENT_NAME" in
             issues)
-              args+=(--from-issue)
+              args+=(--from-issue --command-issue 101)
               ;;
             workflow_dispatch)
               args+=(--scope "$DISPATCH_SCOPE" --command-id "workflow-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}")
