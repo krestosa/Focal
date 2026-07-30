@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 345,
+  "version": 346,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T20:56:00Z",
   "lastResult": "PARTIAL",
   "lastRunId": "7250ea1c-e52e-412b-a359-260b5100572d",
-  "lastCommandId": "c93ee1b3-9881-4204-b45b-b8e949510f87",
+  "lastCommandId": "838413da-fcbd-4ddd-b8ab-06042237fc2c",
   "lastCommandAccepted": true,
-  "lastCommandReason": "TERMINAL_STATE_CONFIRMED",
-  "lastCommandProcessedAt": "2026-07-30T20:57:19.916385Z",
+  "lastCommandReason": "STATE_OBSERVED",
+  "lastCommandProcessedAt": "2026-07-30T22:20:03.383155Z",
   "note": "PR #103 merged with exact-head Validation success and Mesa evidence artifact publication; roadmap and Iris matrix reconciliation remains pending",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -71,7 +71,8 @@
     "2fb1a8b0-5e51-407e-a61d-0e9f5942bdc5",
     "2679fa72-b8a3-4096-b9c6-e5676da0fe78",
     "18db4cc2-36be-4b0c-84bd-a0883ab063dc",
-    "c93ee1b3-9881-4204-b45b-b8e949510f87"
+    "c93ee1b3-9881-4204-b45b-b8e949510f87",
+    "838413da-fcbd-4ddd-b8ab-06042237fc2c"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
