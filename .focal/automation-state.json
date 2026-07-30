@@ -1,19 +1,19 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 308,
-  "status": "idle",
+  "version": 309,
+  "status": "working",
   "mode": "normal",
-  "phase": "idle",
-  "runId": null,
-  "startedAt": null,
-  "heartbeatAt": null,
-  "leaseExpiresAt": null,
-  "softStopAt": null,
-  "cleanupAt": null,
-  "hardKillAt": null,
-  "deadlineAt": null,
-  "baseMainSha": null,
+  "phase": "LOCK_ACQUISITION",
+  "runId": "878990bb-ab4b-486f-a44f-b4c61ae13383",
+  "startedAt": "2026-07-30T12:29:01Z",
+  "heartbeatAt": "2026-07-30T12:31:12Z",
+  "leaseExpiresAt": "2026-07-30T13:01:12Z",
+  "softStopAt": "2026-07-30T13:19:01Z",
+  "cleanupAt": "2026-07-30T13:24:01Z",
+  "hardKillAt": "2026-07-30T13:27:31Z",
+  "deadlineAt": "2026-07-30T13:27:31Z",
+  "baseMainSha": "b42fdec2ba857c58d56d2b718e5ccc4960951baa",
   "workBranch": null,
   "workBranchHeadSha": null,
   "pullRequest": null,
@@ -21,11 +21,11 @@
   "lastCompletedAt": "2026-07-30T08:19:42.011156Z",
   "lastResult": "PASS",
   "lastRunId": "9a349a86-05f3-4c87-9220-cd5bea11b35c",
-  "lastCommandId": "82e2d863-3df1-4c5b-bf22-98bd5d9596cd",
+  "lastCommandId": "cc00e5cd-288d-4571-a40f-f258ce28c1cf",
   "lastCommandAccepted": true,
-  "lastCommandReason": "STATE_OBSERVED",
-  "lastCommandProcessedAt": "2026-07-30T12:30:43.289441Z",
-  "note": "PR #94 merged after Validation run 30523756394 succeeded; GLCLI-004 roadmap and Iris evidence reconciliation is now present on main",
+  "lastCommandReason": "LEASE_ACQUIRED",
+  "lastCommandProcessedAt": "2026-07-30T12:31:58.082002Z",
+  "note": null,
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
   "lastAbandonedAt": "2026-07-30T01:06:56.223376Z",
@@ -39,6 +39,17 @@
   "lastWatchdogAction": "STALE_LEASE_RELEASED",
   "processedCommandIds": [
     "6c92ae30-6a54-4aa8-bcb7-de64a7c7c54b",
-    "82e2d863-3df1-4c5b-bf22-98bd5d9596cd"
-  ]
+    "82e2d863-3df1-4c5b-bf22-98bd5d9596cd",
+    "cc00e5cd-288d-4571-a40f-f258ce28c1cf"
+  ],
+  "phaseCheckpoints": {
+    "LOCK_ACQUISITION": {
+      "commandId": "cc00e5cd-288d-4571-a40f-f258ce28c1cf",
+      "checkpointSha": "d4323dfa55e6dbd746862b201127ae6663990438",
+      "workBranch": null,
+      "workBranchHeadSha": null,
+      "pullRequest": null,
+      "processedAt": "2026-07-30T12:31:58.082002Z"
+    }
+  }
 }
