@@ -7,8 +7,8 @@ Maintain one evidence-based plan for completing Focal as a safe, scalable Iris s
 - Canonical Iris evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md)
 - Canonical terminal OpenGL harness contract: [`OPENGL-RUNTIME-HARNESS.md`](OPENGL-RUNTIME-HARNESS.md)
 - Audit UTC: `2026-07-30`
-- Baseline audited: `cc85e7c4f221ad7f4298f5a96ea34f3c227ac314`
-- Roadmap schema revision: `18`
+- Baseline audited: `e579a9929c83483b855b886f98bd99e4d1e87129`
+- Roadmap schema revision: `19`
 - Current stage: Phase 1 foundation, Iris contracts and terminal OpenGL runtime harness
 - Runtime rule: no shader, buffer, multipass, temporal or profile feature may claim runtime acceptance without the evidence level declared in its row.
 - Documentation rule: every feature row contains at least one direct official Iris documentation link, reviewed on `2026-07-30` UTC.
@@ -42,7 +42,7 @@ A checked item requires implementation on `main`, applicable tests, green releva
 | Sodium | 🟣 REVALIDAR | Pin the version required by the selected Iris release. | [Iris overview][iris-overview] |
 | Fabric Loader/API | 🟣 REVALIDAR | Pin compatible versions and hashes. | [Iris repository][iris-repo] |
 | Java | 🟣 REVALIDAR | Confirm the official runtime requirement. | [Iris repository][iris-repo] |
-| OpenGL/GLSL | 🟡 EN PROGRESO | EGL and hidden GLFW create real Mesa llvmpipe contexts; PR #93 adds real stage compilation/program link and PR #97 adds deterministic framebuffer draw plus finite color/depth readback for representative gbuffers, composite and final-equivalent fixtures. Native WGL, CGL/NSOpenGL and representative physical-GPU evidence remain pending. | [Programs][iris-programs], [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] |
+| OpenGL/GLSL | 🟡 EN PROGRESO | EGL and hidden GLFW create real Mesa llvmpipe contexts; PR #93 adds real stage compilation/program link and PR #97 adds deterministic framebuffer draw plus finite color/depth readback for representative gbuffers, composite and final-equivalent fixtures, and PR #99 adds an isolated worker supervisor with hard timeout, bounded termination escalation, stable exit 7 classification and persisted execution artifacts. Native WGL, CGL/NSOpenGL, representative physical-GPU evidence and comprehensive driver context-loss detection remain pending. | [Programs][iris-programs], [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] |
 | Drivers/hardware | ⚪ PENDIENTE | Preserve Mesa software evidence and establish representative AMD, NVIDIA and Intel evidence. | [Debugging][iris-debug] |
 
 ## Feature-row contract
@@ -164,7 +164,7 @@ Each row below is a feature unit. `Acceptance / tests` names the observable comp
 | [ ] ⚪ `PROFILE-004` | P2 | ULTRA hard limits and HIGH fallback. | No unlimited setting; memory, samples and dispatch remain within declared caps. | [Shader settings][iris-settings], [Feature flags][iris-flags] | Depends on measured HIGH. |
 | [ ] ⚪ `PERF-001` | P1 | Per-pass timing, memory, samples and permutation budgets. | Reports separate compile, upload, draw/dispatch, sync and readback; baseline comparisons are reproducible. | [Debugging][iris-debug] | Integrate timer queries and client metrics. |
 | [ ] ⚪ `SAFE-001` | P0 | Static checks for loops, division, normalization, indices and initialization. | Negative fixtures fail with actionable diagnostics; all shaders pass policy. | [Programs][iris-programs], [Patcher][iris-patcher] | Extend validation scripts. |
-| [ ] ⚪ `SAFE-002` | P0 | Isolated processes, watchdogs and no-driver-hang policy. | Forced timeout/crash fixtures terminate, preserve artifacts and classify exit code. | [Debugging][iris-debug] | Implement with `GLCLI-007`. |
+| [x] 🟢 `SAFE-002` | P0 | Isolated processes, watchdogs and no-driver-hang policy. | PR #99 merged the isolated `focal-gl` worker supervisor after exact-head Validation run `30547008215` succeeded on `7791428a603525b6a1001c6541973ec35f607665`. Forced timeout and POSIX signal fixtures terminate the worker, return stable exit code 7 and preserve `worker.stdout.log`, `worker.stderr.log` and `worker-execution.json`; see [`docs/evidence/GLCLI-007-WORKER-ISOLATION.md`](evidence/GLCLI-007-WORKER-ISOLATION.md). Evidence is `STATIC` at the Python process boundary and does not prove every Windows descendant-cleanup configuration or driver context-loss path. | [Debugging][iris-debug] | Preserve the supervisor boundary; extend platform-specific cleanup and context-loss coverage through `QA-005` and `GLCLI-008`. |
 
 ## 11. Terminal OpenGL harness and validation
 
@@ -181,7 +181,7 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 | [x] 🟢 `GLCLI-004` | P0 | Stage compilation and program link with complete diagnostics. | PR #93 merged real hidden-GLFW compilation/link after Validation run `30523122062` succeeded. Mesa llvmpipe compiled and linked gbuffers-style, composite-style and final-equivalent vertex/fragment fixtures; an invalid vertex fixture returned exit 4 with a non-empty driver log. Evidence is `GL_COMPILE_LINK` for these exact fixtures and backend, not render/readback or Iris-client acceptance. | [Programs][iris-programs], [Gbuffers programs][iris-gbuffers], [Final program][iris-final] | Preserve diagnostics and source preparation; render/readback continuation is accepted in `GLCLI-005`. |
 | [x] 🟢 `GLCLI-005` | P0 | Offscreen framebuffer render and color/depth readback. | PR #97 merged at `cc85e7c4f221ad7f4298f5a96ea34f3c227ac314` after Validation run `30544545413` succeeded on exact head `53756e93b12ce3ce8b8b1f7d48f67f5ddeceb9b1`. Mesa llvmpipe under hidden GLFW/Xvfb completed RGBA32F color plus depth framebuffers, deterministic geometry/fullscreen draws, sampler binding, finite normalized color/depth readback, changed-attachment invariants and PPM/PGM/JSON artifacts for representative gbuffers, composite and final-equivalent fixtures. Evidence is `GL_RENDER_READBACK` only for these exact standalone fixtures; see [`docs/evidence/GLCLI-005-MESA-READBACK.md`](evidence/GLCLI-005-MESA-READBACK.md). | [Buffers][iris-buffers], [ColorTex][iris-colortex], [RENDERTARGETS][iris-rendertargets], [Final program][iris-final] | Preserve the minimum path; advance process isolation in `GLCLI-007` before risky shaders and multipass/history in `GLCLI-006`. |
 | [ ] ⚪ `GLCLI-006` | P0 | Declarative multipass fixtures, ping-pong, mipmaps, barriers, multiframe history and deterministic invariants. | Repeated suite runs produce stable results within tolerance; temporal reset fixtures pass. | [Programs][iris-programs], [Rendering properties][iris-rendering], [Buffers][iris-buffers] | Depends on completed `GLCLI-005` and pending `TEMP-001`. |
-| [ ] ⚪ `GLCLI-007` | P0 | Isolated worker process, watchdog, timeout, crash/context-loss classification and cleanup. | Forced hang/crash tests return exit 7, terminate worker and preserve logs/partial artifacts. | [Debugging][iris-debug] | Depends on `GLCLI-001`; required before risky shaders. |
+| [x] 🟢 `GLCLI-007` | P0 | Isolated worker process, watchdog, timeout, crash/context-loss classification and cleanup. | PR #99 merged as `27fd2b16a3472b5588a3a69e6aba6f93b345f80b` after exact-head Validation run `30547008215` succeeded on `7791428a603525b6a1001c6541973ec35f607665`. The public entrypoint supervises runtime commands in a separate process group/session, applies the existing timeout as a hard deadline, terminates then escalates after a bounded grace period, relays normal output/exit codes and persists worker logs plus `worker-execution.json`. Forced hangs and POSIX signals return stable exit code 7. Evidence is `STATIC` at the process boundary; see [`docs/evidence/GLCLI-007-WORKER-ISOLATION.md`](evidence/GLCLI-007-WORKER-ISOLATION.md). | [Debugging][iris-debug] | Preserve isolation; platform-specific descendant cleanup and comprehensive OpenGL context-loss detection remain scoped to `QA-005`/`GLCLI-008`. |
 | [ ] ⚪ `GLCLI-008` | P1 | CI matrix and evidence manifest for Mesa software versus real GPU/driver. | Linux Mesa job publishes JSON/log/image artifacts; hardware procedure records vendor/driver separately; no universal claims. | [Debugging][iris-debug], [macOS limits][iris-macos] | Depends on `GLCLI-002/005/007`. |
 | [ ] ⚪ `QA-004` | P1 | Deterministic visual scenes and invariants. | Fixtures define geometry, textures, uniforms, expected ranges and tolerances. | [Uniforms][iris-uniforms], [Attributes][iris-attributes] | Extend accepted `GLCLI-005` fixtures into `GLCLI-006`. |
 | [ ] ⚪ `QA-005` | P1 | NaN/Inf, context-loss, timeout and determinism regression suite. | Fault injection produces expected classification without hanging CI. | [Debugging][iris-debug] | Depends on `GLCLI-006/007`. |
@@ -212,7 +212,7 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 
 ## Ordering, risks and fallbacks
 
-1. Finish native `GLCLI-002` WGL and CGL/NSOpenGL routes plus representative physical-GPU evidence while implementing `GLCLI-007` process isolation; do not begin risky visual shader features before the watchdog boundary is established.
+1. Preserve the completed `GLCLI-007` isolation boundary while finishing native `GLCLI-002` WGL and CGL/NSOpenGL routes plus representative physical-GPU evidence; do not bypass the worker supervisor for risky visual shader or multipass work.
 2. Continue Iris-format work only when it does not delay the harness foundation.
 3. Pin the version lock before client compatibility claims.
 4. Define HDR buffers and SAFE/BALANCED profiles before broad material and lighting expansion.
@@ -243,10 +243,11 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 - `2026-07-30` — Revision 16 reconciled PR #91 and Validation run `30521453670`, completed `GLCLI-003` at `STATIC` evidence, and preserved compile/link and render/readback as `GLCLI-004/005`.
 - `2026-07-30` — Revision 17 reconciled PR #93 and Validation run `30523122062`, completed `GLCLI-004` at `GL_COMPILE_LINK` evidence on exact Mesa llvmpipe fixtures, and retained framebuffer render/readback as `GLCLI-005`.
 - `2026-07-30` — Revision 18 reconciled PR #97, exact-head Validation run `30544545413` and merge `cc85e7c4f221ad7f4298f5a96ea34f3c227ac314`, completing `GLCLI-005` at bounded `GL_RENDER_READBACK` evidence for representative Mesa llvmpipe/hidden-GLFW fixtures.
+- `2026-07-30` — Revision 19 reconciled PR #99, exact-head Validation run `30547008215`, merge `27fd2b16a3472b5588a3a69e6aba6f93b345f80b` and the canonical worker-isolation evidence, completing `GLCLI-007` and `SAFE-002` at `STATIC` process-boundary evidence while retaining platform and driver limits.
 
 ## Next prioritized unit
 
-`GLCLI-007 isolated worker and watchdog`: execute OpenGL work in a killable child process, classify timeout/crash/context loss as exit 7, preserve partial artifacts and prove cleanup before advancing risky shaders or multipass history.
+`GLCLI-008 CI evidence matrix`: publish reproducible Mesa software artifacts and a separate real-GPU/driver evidence procedure without universal compatibility claims; continue native `GLCLI-002` platform routes as a prerequisite.
 
 ## Official Iris documentation references
 
