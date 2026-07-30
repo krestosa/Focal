@@ -6,12 +6,12 @@ Maintain one evidence-based plan for completing Focal as a safe, scalable Iris s
 
 - Canonical Iris evidence: [`IRIS-CAPABILITY-MATRIX.md`](IRIS-CAPABILITY-MATRIX.md)
 - Canonical terminal OpenGL harness contract: [`OPENGL-RUNTIME-HARNESS.md`](OPENGL-RUNTIME-HARNESS.md)
-- Audit UTC: `2026-07-29`
-- Baseline audited: `d66834fc9cff7375da50930c3572eaaa55cdd008`
-- Roadmap schema revision: `13`
+- Audit UTC: `2026-07-30`
+- Baseline audited: `cc243812bd225f7c26aa4fbae818c11c0f12e839`
+- Roadmap schema revision: `14`
 - Current stage: Phase 1 foundation, Iris contracts and terminal OpenGL runtime harness
 - Runtime rule: no shader, buffer, multipass, temporal or profile feature may claim runtime acceptance without the evidence level declared in its row.
-- Documentation rule: every feature row contains at least one direct official Iris documentation link, reviewed on `2026-07-29` UTC.
+- Documentation rule: every feature row contains at least one direct official Iris documentation link, reviewed on `2026-07-30` UTC.
 
 ## Status legend
 
@@ -42,7 +42,7 @@ A checked item requires implementation on `main`, applicable tests, green releva
 | Sodium | 🟣 REVALIDAR | Pin the version required by the selected Iris release. | [Iris overview][iris-overview] |
 | Fabric Loader/API | 🟣 REVALIDAR | Pin compatible versions and hashes. | [Iris repository][iris-repo] |
 | Java | 🟣 REVALIDAR | Confirm the official runtime requirement. | [Iris repository][iris-repo] |
-| OpenGL/GLSL | 🟡 EN PROGRESO | The merged EGL and Mesa llvmpipe probes report a real context, and PR #77 added robust indexed core-profile extension enumeration; complete alternate hidden-window/platform backends. | [Programs][iris-programs], [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] |
+| OpenGL/GLSL | 🟡 EN PROGRESO | The merged EGL and controlled hidden-window GLFW probes report real contexts on Mesa llvmpipe, and PR #77 provides indexed core-profile extension enumeration; complete native WGL and CGL/NSOpenGL routes plus representative physical-GPU evidence. | [Programs][iris-programs], [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] |
 | Drivers/hardware | ⚪ PENDIENTE | Preserve Mesa software evidence and establish representative AMD, NVIDIA and Intel evidence. | [Debugging][iris-debug] |
 
 ## Feature-row contract
@@ -54,7 +54,7 @@ Each row below is a feature unit. `Acceptance / tests` names the observable comp
 | State / ID | Priority | Feature and observable scope | Acceptance / tests | Iris docs | Dependencies / next action |
 |---|---:|---|---|---|---|
 | [x] 🟢 `GOV-001` | P0 | Body-only lease coordinator prevents overlapping autonomous runs. | Issue #7 and `.github/workflows/automation-state.yml` on `main`; acquire/release evidence. | [Iris repository][iris-repo] | Preserve v3 state contract. |
-| [ ] 🟣 `GOV-002` | P0 | Regression suite for concurrency, stale recovery, ownership loss and malformed commands. | Automated fixtures cover two contenders, expired lease, invalid token and lost ownership. | [Iris repository][iris-repo] | Add isolated workflow tests. |
+| [ ] 🟣 `GOV-002` | P0 | Regression suite for concurrency, stale recovery, ownership loss and malformed commands. | Automated fixtures cover two contenders, expired lease, invalid token and lost ownership; PR #81 added immediate stale-lease reconciliation coverage and PR #82 added shared serialization plus optimistic state-revalidation coverage. Full row acceptance still requires every listed fixture on the exact validation head. | [Iris repository][iris-repo] | Complete and verify the remaining isolated workflow fixtures. |
 | [x] 🟢 `GOV-003` | P0 | Remote checkpoint discipline keeps recoverable branches, PRs and reports. | Existing autonomous cycles show remote checkpoints before timeout. | [Iris repository][iris-repo] | Preserve policy. |
 | [ ] ⚪ `GOV-004` | P1 | Branch and PR recovery audit classifies abandoned, active and merged work. | CLI/report lists remote branches and PR disposition without deleting active work. | [Iris repository][iris-repo] | Implement read-only audit then guarded cleanup. |
 
@@ -176,7 +176,7 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 | [ ] ⚪ `QA-002` | P0 | Unified `shadercheck` CLI orchestrates static, OpenGL and client-capable checks. | One command selects applicable layers and returns machine-readable summary. | [Debugging][iris-debug], [Patcher][iris-patcher] | Wrap `focal-gl` without hiding exit codes. |
 | [ ] ⚪ `QA-003` | P0 | Aggregate headless OpenGL acceptance gate. | `GLCLI-001` through `GLCLI-008` satisfy minimum compile/link/render/readback and safety contract. | [Programs][iris-programs], [Buffers][iris-buffers], [Final program][iris-final] | Cannot complete before all child gates. |
 | [x] 🟢 `GLCLI-001` | P0 | Stable terminal interface: `probe`, `compile`, `render`, `suite`, human output, `--json`, artifacts and versioned exit codes. | Merged PR #62 provides `focal-gl`, `tools/focal_gl.py` and subprocess regression tests; exit codes 0/2/3/4/5/6/7/8 are locked. Evidence level is `STATIC`; runtime context remains outside this unit. | [Programs][iris-programs], [Debugging][iris-debug] | Preserve contract; continue with `GLCLI-002`. |
-| [ ] 🟡 `GLCLI-002` | P0 | Real offscreen context creation and capability probe across EGL/hidden-window backends. | PR #71 merged the real EGL pbuffer probe with Validation run `30480734608` and evidence in [`docs/evidence/GLCLI-002-EGL-PROBE.md`](evidence/GLCLI-002-EGL-PROBE.md). PR #74 added the explicit Mesa llvmpipe EGL gate; Validation run `30490039060` succeeded, merge `70d0e31f76cd4ede71876b44e5f1966788d81d0a` is on `main`, and PR #75 published [`docs/evidence/GLCLI-002-MESA-CI-PROBE.md`](evidence/GLCLI-002-MESA-CI-PROBE.md). PR #77 added `GL_NUM_EXTENSIONS` plus `glGetStringi` enumeration with a controlled legacy fallback; Validation run `30493688616` succeeded and merge `d66834fc9cff7375da50930c3572eaaa55cdd008` is on `main`. Evidence remains `STATIC` because no shader stage was compiled or linked. | [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] | Complete controlled hidden GLFW, WGL and CGL/NSOpenGL routes where supported; keep representative hardware evidence separate from llvmpipe. |
+| [ ] 🟡 `GLCLI-002` | P0 | Real offscreen context creation and capability probe across EGL/hidden-window backends. | PR #71 merged the real EGL pbuffer probe with Validation run `30480734608` and evidence in [`docs/evidence/GLCLI-002-EGL-PROBE.md`](evidence/GLCLI-002-EGL-PROBE.md). PR #74 added the explicit Mesa llvmpipe EGL gate; Validation run `30490039060` succeeded, merge `70d0e31f76cd4ede71876b44e5f1966788d81d0a` is on `main`, and PR #75 published [`docs/evidence/GLCLI-002-MESA-CI-PROBE.md`](evidence/GLCLI-002-MESA-CI-PROBE.md). PR #77 added `GL_NUM_EXTENSIONS` plus `glGetStringi` enumeration with a controlled legacy fallback; Validation run `30493688616` succeeded and merge `d66834fc9cff7375da50930c3572eaaa55cdd008` is on `main`. PR #79 merged the controlled hidden-window GLFW backend. PR #80 published [`docs/evidence/GLCLI-002-GLFW-CI-PROBE.md`](evidence/GLCLI-002-GLFW-CI-PROBE.md), recording validated head `12dc8e24f9339193743f2372b2b8e785ebc60aa7` and successful Validation run `30500297439`. The GLFW fixture created a real hidden context on Mesa llvmpipe under Xvfb and reported capabilities. Evidence remains context/probe evidence only: no shader stage was compiled or linked and no framebuffer render/readback was accepted. | [OpenGL extensions][iris-extensions], [macOS limits][iris-macos] | Complete native WGL and CGL/NSOpenGL routes where supported and collect representative physical-GPU evidence; then advance to the minimum `GLCLI-003/004/005` source, compile/link and render/readback path. |
 | [ ] ⚪ `GLCLI-003` | P0 | Source-mode adapter for original, preprocessed and Iris-patched GLSL. | Report records `sourceMode`; includes/defines resolve; patched output can be consumed without claiming client equivalence. | [Iris Patcher][iris-patcher], [Macros][iris-macros] | Depends on `IRIS-010`; source mode can start first. |
 | [ ] ⚪ `GLCLI-004` | P0 | Stage compilation and program link with complete diagnostics. | At least one gbuffers-style, one composite-style and one final-equivalent program compile/link in real context; negative fixtures classify stage/link failures. | [Programs][iris-programs], [Gbuffers programs][iris-gbuffers], [Final program][iris-final] | Depends on `GLCLI-002/003`, `IRIS-002`. |
 | [ ] ⚪ `GLCLI-005` | P0 | Offscreen framebuffer render and color/depth readback. | Creates geometry/fullscreen inputs, attachments and samplers; draw succeeds; framebuffer is complete; pixels are finite and match invariants. | [Buffers][iris-buffers], [ColorTex][iris-colortex], [RENDERTARGETS][iris-rendertargets], [Final program][iris-final] | Depends on `GLCLI-004`, `IRIS-003/004`. |
@@ -212,7 +212,7 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 
 ## Ordering, risks and fallbacks
 
-1. Finish the remaining `GLCLI-002` hidden-window/platform backend acceptance; then implement the minimum `GLCLI-004/005` compile-link-render-readback path before advanced visual work.
+1. Finish native `GLCLI-002` WGL and CGL/NSOpenGL routes and representative physical-GPU evidence while beginning the minimum `GLCLI-003/004/005` source, compile-link and render-readback path; do not begin visual shader features before that minimum runtime path is established.
 2. Continue Iris-format work only when it does not delay the harness foundation.
 3. Pin the version lock before client compatibility claims.
 4. Define HDR buffers and SAFE/BALANCED profiles before broad material and lighting expansion.
@@ -238,10 +238,11 @@ The canonical CLI is `focal-gl`. It must create a real context; a parser, transp
 - `2026-07-29` — Revision 11 reconciled merged PR #71 and evidence PR #72, marked `GLCLI-002` `EN PROGRESO`, and retained the remaining backend, extension and Mesa CI gates without claiming compile/link evidence.
 - `2026-07-29` — Revision 12 reconciled the explicit Mesa llvmpipe probe from PR #74 and evidence PR #75, removed the satisfied Mesa CI gate from pending work, and retained `GLCLI-002` `EN PROGRESO` at `STATIC` evidence.
 - `2026-07-29` — Revision 13 reconciled PR #77 and Validation run `30493688616`, recorded robust indexed core-profile extension enumeration, and retained only hidden GLFW, WGL and CGL/NSOpenGL routes plus representative hardware evidence as pending `GLCLI-002` work.
+- `2026-07-30` — Revision 14 reconciled the controlled hidden GLFW route from PR #79, canonical evidence from PR #80 and watchdog/coordinator hardening from PR #81/#82 against baseline `cc243812bd225f7c26aa4fbae818c11c0f12e839`; `GLCLI-002` remains `EN PROGRESO` without compile/link or render/readback claims.
 
 ## Next prioritized unit
 
-`GLCLI-002 — Complete offscreen context and capability probe acceptance`: add controlled hidden GLFW fallback plus WGL and CGL/NSOpenGL routes where supported. Keep representative hardware evidence distinct from llvmpipe, then continue with the minimum `GLCLI-004/005` compile-link-render-readback path.
+`GLCLI-002 boundary completion and GLCLI-003/004 entry`: finish native WGL and CGL/NSOpenGL capability routes and representative physical-GPU evidence without blocking implementation of the source-mode adapter and minimum real-context compile/link fixtures. Do not begin visual shader features before the `GLCLI-004/005` minimum path is established.
 
 ## Official Iris documentation references
 
