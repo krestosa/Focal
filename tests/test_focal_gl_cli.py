@@ -69,7 +69,7 @@ class FocalGlCliTests(unittest.TestCase):
                 self.assertEqual(payload["outcome"], "UNSUPPORTED")
                 self.assertEqual(payload["evidenceLevel"], "STATIC")
 
-    def test_compile_prepares_sources_without_claiming_compile_link(self) -> None:
+    def test_compile_preserves_source_metadata_for_unimplemented_backend(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             shaders = root / "shaders"
@@ -77,6 +77,10 @@ class FocalGlCliTests(unittest.TestCase):
             (shaders / "common.glsl").write_text("const float VALUE = 1.0;\n", encoding="utf-8")
             (shaders / "example.vsh").write_text(
                 '#version 330 core\n#include "common.glsl"\nvoid main() { gl_Position = vec4(VALUE); }\n',
+                encoding="utf-8",
+            )
+            (shaders / "example.fsh").write_text(
+                "#version 330 core\nout vec4 fragColor;\nvoid main() { fragColor = vec4(1.0); }\n",
                 encoding="utf-8",
             )
             result = self.run_cli(
@@ -91,6 +95,8 @@ class FocalGlCliTests(unittest.TestCase):
                 "the_nether",
                 "--source-mode",
                 "preprocessed",
+                "--backend",
+                "egl",
                 "--json",
             )
         self.assertEqual(result.returncode, focal_gl.EXIT_UNSUPPORTED, result.stderr)
@@ -104,10 +110,10 @@ class FocalGlCliTests(unittest.TestCase):
             preparation["defines"],
             {"FOCAL_DIMENSION_THE_NETHER": "1", "FOCAL_PROFILE_BALANCED": "1"},
         )
-        self.assertEqual(preparation["stages"][0]["stage"], "vsh")
-        self.assertEqual(len(preparation["stages"][0]["sha256"]), 64)
-        self.assertNotIn("source", preparation["stages"][0])
-        self.assertIn("GLCLI-004", payload["message"])
+        self.assertEqual([item["stage"] for item in preparation["stages"]], ["vsh", "fsh"])
+        self.assertTrue(all(len(item["sha256"]) == 64 for item in preparation["stages"]))
+        self.assertTrue(all("source" not in item for item in preparation["stages"]))
+        self.assertIn("use glfw or auto", payload["message"])
 
     def test_compile_invalid_request_is_usage_error(self) -> None:
         result = self.run_cli("compile", "--json")
