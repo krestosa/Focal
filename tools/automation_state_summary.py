@@ -63,6 +63,16 @@ def _activity(state: dict[str, Any]) -> str:
     return "💤 En espera"
 
 
+def _status_callout(status: Any, mode: Any) -> str:
+    if status == "working" and mode == "recovery":
+        return "> [!WARNING]\n> Hay una recuperación activa. No inicies otra ejecución hasta que el estado vuelva a `IDLE`."
+    if status == "working":
+        return "> [!IMPORTANT]\n> Hay una lease activa. No inicies otra ejecución hasta que el estado vuelva a `IDLE`."
+    if status == "idle":
+        return "> [!TIP]\n> El coordinador está libre y puede aceptar una nueva ejecución."
+    return "> [!CAUTION]\n> El estado no es válido. Revisá los datos técnicos antes de iniciar otra ejecución."
+
+
 def render_summary(state: dict[str, Any]) -> str:
     status = state.get("status")
     mode = state.get("mode")
@@ -104,14 +114,9 @@ def render_summary(state: dict[str, Any]) -> str:
         ]
     )
 
-    lines = [SUMMARY_START, heading, ""]
-    if status == "working":
-        lines.append("> [!IMPORTANT]\n> Hay una lease activa. No inicies otra ejecución hasta que el estado vuelva a `IDLE`.")
-    else:
-        lines.append("> [!TIP]\n> El coordinador está libre y puede aceptar una nueva ejecución.")
-    lines.extend(["", "| Campo | Resumen |", "|---|---|"])
+    lines = [SUMMARY_START, heading, "", "| Campo | Resumen |", "|---|---|"]
     lines.extend(f"| **{name}** | {value} |" for name, value in rows)
-    lines.extend(["", SUMMARY_END])
+    lines.extend(["", _status_callout(status, mode), "", SUMMARY_END])
     return "\n".join(lines)
 
 
