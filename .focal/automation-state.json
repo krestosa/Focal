@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 323,
+  "version": 324,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T13:30:59.083248Z",
   "lastResult": "PARTIAL",
   "lastRunId": "a56d151f-6ef3-49ab-8a85-e018a5f61b98",
-  "lastCommandId": "3c9f13b1-4cf6-42d1-a16e-791c14ff1a24",
-  "lastCommandAccepted": true,
-  "lastCommandReason": "LEASE_RELEASED",
-  "lastCommandProcessedAt": "2026-07-30T13:32:11.360253Z",
+  "lastCommandId": "afe7d988-3a25-446e-a687-97687bbf754d",
+  "lastCommandAccepted": false,
+  "lastCommandReason": "STATE_VERSION_MISMATCH",
+  "lastCommandProcessedAt": "2026-07-30T14:18:26.141306Z",
   "note": "GLCLI-007 implementation merged via PR #99 after Validation run 30547008215; canonical roadmap and Iris matrix reconciliation preserved in draft PR #100",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -52,7 +52,8 @@
     "79fe7ebc-add1-4361-9505-6616f1867a11",
     "15f733da-5b7f-4be5-b69a-6d76c7c98d62",
     "e8f259d7-dbad-4351-85d0-4be186b245df",
-    "3c9f13b1-4cf6-42d1-a16e-791c14ff1a24"
+    "3c9f13b1-4cf6-42d1-a16e-791c14ff1a24",
+    "afe7d988-3a25-446e-a687-97687bbf754d"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
