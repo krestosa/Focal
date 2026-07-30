@@ -33,6 +33,43 @@ class Decision:
     reason: str
 
 
+@dataclass(frozen=True)
+class EvaluationSnapshot:
+    command_id: Any
+    state_version: Any
+    run_id: Any
+    last_command_id: Any
+    lease_expires_at: Any
+
+
+def evaluation_snapshot(
+    command: dict[str, Any],
+    state: dict[str, Any],
+) -> EvaluationSnapshot:
+    """Capture the fields that establish lease ownership for optimistic writes."""
+
+    return EvaluationSnapshot(
+        command_id=command.get("commandId"),
+        state_version=state.get("version"),
+        run_id=state.get("runId"),
+        last_command_id=state.get("lastCommandId"),
+        lease_expires_at=state.get("leaseExpiresAt"),
+    )
+
+
+def state_unchanged_during_evaluation(
+    *,
+    expected_command: dict[str, Any],
+    expected_state: dict[str, Any],
+    current_command: dict[str, Any],
+    current_state: dict[str, Any],
+) -> bool:
+    return evaluation_snapshot(expected_command, expected_state) == evaluation_snapshot(
+        current_command,
+        current_state,
+    )
+
+
 def parse_timestamp(value: Any) -> datetime | None:
     if not isinstance(value, str) or not value:
         return None
@@ -114,7 +151,17 @@ def evaluate(
 
 def repaired_state(state: dict[str, Any], *, repaired_at: datetime) -> dict[str, Any]:
     updated = dict(state)
-    for key in ("owner", "executionSource", "client", "provider", "model", "agent", "actor", "sender", "lastAbandonedOwner"):
+    for key in (
+        "owner",
+        "executionSource",
+        "client",
+        "provider",
+        "model",
+        "agent",
+        "actor",
+        "sender",
+        "lastAbandonedOwner",
+    ):
         updated.pop(key, None)
     abandoned_run_id = state.get("runId")
     checkpoint = state.get("checkpointSha") or state.get("workBranchHeadSha")
@@ -166,7 +213,12 @@ class GitHubApi:
     def __init__(self, token: str) -> None:
         self.token = token
 
-    def request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> Any:
+    def request(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None = None,
+    ) -> Any:
         data = None
         if payload is not None:
             data = json.dumps(payload, separators=(",", ":")).encode("utf-8")
@@ -192,7 +244,11 @@ class GitHubApi:
         return json.loads(raw) if raw else None
 
 
-def active_workflow_runs(api: GitHubApi, repository: str, current_run_id: str | None) -> list[dict[str, Any]]:
+def active_workflow_runs(
+    api: GitHubApi,
+    repository: str,
+    current_run_id: str | None,
+) -> list[dict[str, Any]]:
     response = api.request("GET", f"/repos/{repository}/actions/runs?per_page=100")
     runs = response.get("workflow_runs", []) if isinstance(response, dict) else []
     result: list[dict[str, Any]] = []
@@ -223,7 +279,11 @@ def branch_activity(api: GitHubApi, repository: str, branch: Any) -> datetime | 
     return parse_timestamp(committer.get("date") or author.get("date"))
 
 
-def pull_request_activity(api: GitHubApi, repository: str, number: Any) -> datetime | None:
+def pull_request_activity(
+    api: GitHubApi,
+    repository: str,
+    number: Any,
+) -> datetime | None:
     if not isinstance(number, int) or number <= 0:
         return None
     data = api.request("GET", f"/repos/{repository}/pulls/{number}")
@@ -239,7 +299,8 @@ def run(args: argparse.Namespace) -> int:
         raise RuntimeError("repository is required")
 
     api = GitHubApi(token)
-    issue = api.request("GET", f"/repos/{repository}/issues/{args.issue}")
+    issue_path = f"/repos/{repository}/issues/{args.issue}"
+    issue = api.request("GET", issue_path)
     body = (issue or {}).get("body") or ""
     command, _, _ = extract_block(body, COMMAND_START, COMMAND_END)
     state, _, _ = extract_block(body, STATE_START, STATE_END)
@@ -247,7 +308,11 @@ def run(args: argparse.Namespace) -> int:
         raise ValueError("state repository does not match workflow repository")
 
     now = datetime.now(timezone.utc)
-    active_runs = active_workflow_runs(api, repository, os.environ.get("GITHUB_RUN_ID"))
+    active_runs = active_workflow_runs(
+        api,
+        repository,
+        os.environ.get("GITHUB_RUN_ID"),
+    )
     branch_at = branch_activity(api, repository, state.get("workBranch"))
     pr_at = pull_request_activity(api, repository, state.get("pullRequest"))
     decision = evaluate(
@@ -279,10 +344,31 @@ def run(args: argparse.Namespace) -> int:
         print(json.dumps(summary, sort_keys=True))
         return 0
 
-    new_state = repaired_state(state, repaired_at=now)
-    updated_body = replace_state(body, new_state)
+    current_issue = api.request("GET", issue_path)
+    current_body = (current_issue or {}).get("body") or ""
+    current_command, _, _ = extract_block(current_body, COMMAND_START, COMMAND_END)
+    current_state, _, _ = extract_block(current_body, STATE_START, STATE_END)
+    if current_state.get("repository") != repository:
+        raise ValueError("state repository does not match workflow repository")
+
+    if not state_unchanged_during_evaluation(
+        expected_command=command,
+        expected_state=state,
+        current_command=current_command,
+        current_state=current_state,
+    ):
+        summary["reason"] = "STATE_CHANGED_DURING_EVALUATION"
+        summary["observedRunId"] = current_state.get("runId")
+        summary["observedLeaseExpiresAt"] = current_state.get("leaseExpiresAt")
+        summary["observedStateVersion"] = current_state.get("version")
+        print(json.dumps(summary, sort_keys=True))
+        return 0
+
+    repaired_at = datetime.now(timezone.utc)
+    new_state = repaired_state(current_state, repaired_at=repaired_at)
+    updated_body = replace_state(current_body, new_state)
     if not args.dry_run:
-        api.request("PATCH", f"/repos/{repository}/issues/{args.issue}", {"body": updated_body})
+        api.request("PATCH", issue_path, {"body": updated_body})
         summary["action"] = "released"
         summary["stateVersion"] = new_state["version"]
     else:

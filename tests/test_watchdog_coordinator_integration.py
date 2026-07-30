@@ -10,6 +10,7 @@ from tools import stale_lease_watchdog as watchdog
 
 NOW = datetime(2026, 7, 30, 2, 0, tzinfo=timezone.utc)
 REPOSITORY = "krestosa/Focal"
+COORDINATION_GROUP = "focal-automation-state"
 
 
 def expired_working_state() -> dict[str, object]:
@@ -84,6 +85,23 @@ class CoordinatorWatchdogIntegrationTests(unittest.TestCase):
         self.assertLess(workflow.index(coordinator_command), workflow.index(watchdog_command))
         self.assertIn("--expiry-grace-seconds 120", workflow)
         self.assertIn("--activity-grace-seconds 900", workflow)
+
+    def test_coordinator_and_watchdog_share_serialization_group(self) -> None:
+        coordinator_workflow = pathlib.Path(
+            ".github/workflows/automation-state.yml"
+        ).read_text(encoding="utf-8")
+        watchdog_workflow = pathlib.Path(
+            ".github/workflows/stale-lease-watchdog.yml"
+        ).read_text(encoding="utf-8")
+
+        expected_group = f"group: {COORDINATION_GROUP}"
+        for name, workflow in (
+            ("coordinator", coordinator_workflow),
+            ("watchdog", watchdog_workflow),
+        ):
+            with self.subTest(name=name):
+                self.assertIn(expected_group, workflow)
+                self.assertIn("cancel-in-progress: false", workflow)
 
 
 if __name__ == "__main__":

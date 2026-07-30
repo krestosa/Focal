@@ -12,7 +12,7 @@ permissions:
   pull-requests: read
 
 concurrency:
-  group: focal-stale-lease-watchdog
+  group: focal-automation-state
   cancel-in-progress: false
 
 jobs:
