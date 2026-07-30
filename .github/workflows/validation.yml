@@ -124,7 +124,7 @@ jobs:
           print(json.dumps(result, indent=2, sort_keys=True))
 
   mesa-glfw-probe:
-    name: Mesa GLFW hidden-window probe
+    name: Mesa GLFW probe and compile-link
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
@@ -172,3 +172,9 @@ jobs:
           assert context["glslVersion"], context
           assert context["limits"], context
           print(json.dumps(result, indent=2, sort_keys=True))
+
+      - name: Compile and link representative programs
+        run: |
+          xvfb-run --auto-servernum --server-args="-screen 0 640x480x24" \
+            python tests/glcli_compile_acceptance.py > focal-gl-compile-link.json
+          cat focal-gl-compile-link.json
