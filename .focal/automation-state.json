@@ -1,31 +1,31 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 313,
+  "version": 314,
   "status": "working",
   "mode": "normal",
-  "phase": "CI_VALIDATION",
+  "phase": "ROADMAP_RECONCILIATION",
   "runId": "878990bb-ab4b-486f-a44f-b4c61ae13383",
   "startedAt": "2026-07-30T12:29:01Z",
-  "heartbeatAt": "2026-07-30T12:54:37Z",
-  "leaseExpiresAt": "2026-07-30T13:18:30Z",
+  "heartbeatAt": "2026-07-30T12:58:33Z",
+  "leaseExpiresAt": "2026-07-30T13:18:50Z",
   "softStopAt": "2026-07-30T13:19:01Z",
   "cleanupAt": "2026-07-30T13:24:01Z",
   "hardKillAt": "2026-07-30T13:27:31Z",
   "deadlineAt": "2026-07-30T13:27:31Z",
   "baseMainSha": "b42fdec2ba857c58d56d2b718e5ccc4960951baa",
-  "workBranch": "feature/glcli-005-render-readback",
-  "workBranchHeadSha": "53756e93b12ce3ce8b8b1f7d48f67f5ddeceb9b1",
+  "workBranch": null,
+  "workBranchHeadSha": null,
   "pullRequest": 97,
-  "checkpointSha": "53756e93b12ce3ce8b8b1f7d48f67f5ddeceb9b1",
+  "checkpointSha": "cc85e7c4f221ad7f4298f5a96ea34f3c227ac314",
   "lastCompletedAt": "2026-07-30T08:19:42.011156Z",
   "lastResult": "PASS",
   "lastRunId": "9a349a86-05f3-4c87-9220-cd5bea11b35c",
-  "lastCommandId": "c4b0bc0b-c170-40b6-a0d4-c9b0cb988594",
+  "lastCommandId": "69a15ed4-f377-44eb-8716-f5048a9c3dbd",
   "lastCommandAccepted": true,
   "lastCommandReason": "HEARTBEAT_ACCEPTED",
-  "lastCommandProcessedAt": "2026-07-30T12:55:39.067291Z",
-  "note": "Updated stale CLI contract after run 30544225156; real Mesa render/readback job was already green",
+  "lastCommandProcessedAt": "2026-07-30T12:59:47.752441Z",
+  "note": "PR #97 merged at cc85e7c4f221 after Validation run 30544545413 succeeded; reconciling roadmap and Iris evidence",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
   "lastAbandonedAt": "2026-07-30T01:06:56.223376Z",
@@ -44,7 +44,8 @@
     "ca297205-3754-4320-b21e-07f9d2d46656",
     "af3dc639-d862-45bc-b3e4-7a8dc064e9f4",
     "36e6ad5f-dbf0-44b6-8e3e-a729a2327f7c",
-    "c4b0bc0b-c170-40b6-a0d4-c9b0cb988594"
+    "c4b0bc0b-c170-40b6-a0d4-c9b0cb988594",
+    "69a15ed4-f377-44eb-8716-f5048a9c3dbd"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
@@ -78,6 +79,14 @@
       "workBranchHeadSha": "53756e93b12ce3ce8b8b1f7d48f67f5ddeceb9b1",
       "pullRequest": 97,
       "processedAt": "2026-07-30T12:55:39.067291Z"
+    },
+    "ROADMAP_RECONCILIATION": {
+      "commandId": "69a15ed4-f377-44eb-8716-f5048a9c3dbd",
+      "checkpointSha": "cc85e7c4f221ad7f4298f5a96ea34f3c227ac314",
+      "workBranch": null,
+      "workBranchHeadSha": null,
+      "pullRequest": 97,
+      "processedAt": "2026-07-30T12:59:47.752441Z"
     }
   }
 }
