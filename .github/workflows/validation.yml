@@ -184,3 +184,26 @@ jobs:
           xvfb-run --auto-servernum --server-args="-screen 0 640x480x24" \
             python tests/glcli_render_acceptance.py > focal-gl-render-readback.json
           cat focal-gl-render-readback.json
+
+      - name: Build Mesa evidence manifest
+        run: |
+          python tools/glcli_evidence_manifest.py \
+            --evidence-dir . \
+            --output focal-gl-evidence-manifest.json \
+            --commit-sha "${GITHUB_SHA}" \
+            --run-id "${GITHUB_RUN_ID}"
+          cat focal-gl-evidence-manifest.json
+
+      - name: Upload Mesa GLCLI evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: focal-gl-mesa-evidence-${{ github.sha }}
+          path: |
+            focal-gl-glfw-probe.json
+            focal-gl-compile-link.json
+            focal-gl-render-readback.json
+            focal-gl-evidence-manifest.json
+            artifacts/**
+          if-no-files-found: error
+          retention-days: 14
