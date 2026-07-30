@@ -1,16 +1,21 @@
-"""Backend dispatch for the public ``focal-gl`` executable.
+"""Backend and source dispatch for the public ``focal-gl`` executable.
 
 The core CLI module retains the EGL implementation. This adapter adds the
-controlled hidden GLFW route without duplicating the argument or result
-contracts, and gives ``auto`` a deterministic EGL-then-GLFW fallback.
+controlled hidden GLFW route, deterministic EGL-then-GLFW fallback, and the
+GLCLI-003 source-preparation boundary used by ``compile`` before GLCLI-004 adds
+real OpenGL stage compilation and program linking.
 """
 from __future__ import annotations
 
+import re
+from pathlib import Path
 from typing import Sequence
 
 from tools.focal_gl import (
     EXIT_CONTEXT_UNAVAILABLE,
     EXIT_OK,
+    EXIT_UNSUPPORTED,
+    EXIT_USAGE,
     SCHEMA_VERSION,
     VERSION,
     ContextUnavailable,
@@ -19,6 +24,7 @@ from tools.focal_gl import (
     build_parser,
     emit,
 )
+from tools.focal_gl_sources import SourceResolutionError, prepare_program
 from tools.glfw_context import GlfwContextUnavailable, create_hidden_glfw_context
 from tools.glfw_probe import GlfwProbeUnavailable, query_current_glfw_context
 
@@ -85,14 +91,79 @@ def _dispatch_probe(args) -> Result:
     return _probe_result(args)
 
 
+def _macro_token(value: str) -> str:
+    token = re.sub(r"[^A-Za-z0-9_]", "_", value.upper()).strip("_")
+    return token or "DEFAULT"
+
+
+def _compile_source_result(args) -> Result:
+    if not args.program:
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "INVALID",
+            EXIT_USAGE,
+            "STATIC",
+            "compile requires --program",
+            str(args.artifacts) if args.artifacts else None,
+        )
+
+    source_root: Path | None = None
+    if args.source_mode == "iris-patched":
+        source_root = (
+            args.artifacts / "iris-patched"
+            if args.artifacts
+            else args.pack / ".focal-gl" / "iris-patched"
+        )
+    define_values: tuple[str, ...] = ()
+    if args.source_mode == "preprocessed":
+        define_values = (
+            f"FOCAL_PROFILE_{_macro_token(args.profile)}=1",
+            f"FOCAL_DIMENSION_{_macro_token(args.dimension)}=1",
+        )
+
+    try:
+        prepared = prepare_program(
+            pack=args.pack,
+            source_root=source_root,
+            program=args.program,
+            source_mode=args.source_mode,
+            define_values=define_values,
+        )
+    except SourceResolutionError as exc:
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "INVALID",
+            EXIT_USAGE,
+            "STATIC",
+            str(exc),
+            str(args.artifacts) if args.artifacts else None,
+        )
+
+    return Result(
+        SCHEMA_VERSION,
+        VERSION,
+        args.command,
+        "UNSUPPORTED",
+        EXIT_UNSUPPORTED,
+        "STATIC",
+        "shader sources prepared and hashed; real OpenGL compile/link remains pending GLCLI-004",
+        str(args.artifacts) if args.artifacts else None,
+        {"sourcePreparation": prepared.metadata()},
+    )
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command == "probe":
         result = _dispatch_probe(args)
+    elif args.command == "compile":
+        result = _compile_source_result(args)
     else:
-        # Preserve the existing command contract until later GLCLI units add
-        # compile, render and suite execution.
         from tools.focal_gl import _not_implemented_result
 
         result = _not_implemented_result(args)
