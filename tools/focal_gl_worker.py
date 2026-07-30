@@ -32,6 +32,14 @@ class WorkerExecution:
     terminated_by_signal: int | None
 
 
+def _as_text(value: str | bytes | None) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return value
+
+
 def _write_worker_artifacts(
     artifacts: Path | None,
     execution: WorkerExecution,
@@ -91,20 +99,22 @@ def run_worker(
         terminated_by_signal = -returncode if returncode < 0 else None
         execution = WorkerExecution(
             returncode=returncode,
-            stdout=stdout,
-            stderr=stderr,
+            stdout=_as_text(stdout),
+            stderr=_as_text(stderr),
             timed_out=False,
             terminated_by_signal=terminated_by_signal,
         )
     except subprocess.TimeoutExpired as exc:
-        partial_stdout = exc.stdout or ""
-        partial_stderr = exc.stderr or ""
+        partial_stdout = _as_text(exc.stdout)
+        partial_stderr = _as_text(exc.stderr)
         _terminate_process_tree(process)
         stdout, stderr = process.communicate()
+        completed_stdout = _as_text(stdout)
+        completed_stderr = _as_text(stderr)
         execution = WorkerExecution(
             returncode=EXIT_TIMEOUT_OR_CONTEXT_LOSS,
-            stdout=partial_stdout + stdout,
-            stderr=partial_stderr + stderr,
+            stdout=completed_stdout or partial_stdout,
+            stderr=completed_stderr or partial_stderr,
             timed_out=True,
             terminated_by_signal=None,
         )
