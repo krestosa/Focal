@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 307,
+  "version": 308,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T08:19:42.011156Z",
   "lastResult": "PASS",
   "lastRunId": "9a349a86-05f3-4c87-9220-cd5bea11b35c",
-  "lastCommandId": "6c92ae30-6a54-4aa8-bcb7-de64a7c7c54b",
+  "lastCommandId": "82e2d863-3df1-4c5b-bf22-98bd5d9596cd",
   "lastCommandAccepted": true,
   "lastCommandReason": "STATE_OBSERVED",
-  "lastCommandProcessedAt": "2026-07-30T08:45:59.602460Z",
+  "lastCommandProcessedAt": "2026-07-30T12:30:43.289441Z",
   "note": "PR #94 merged after Validation run 30523756394 succeeded; GLCLI-004 roadmap and Iris evidence reconciliation is now present on main",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -38,6 +38,7 @@
   "lastWatchdogAt": "2026-07-30T01:06:56.223376Z",
   "lastWatchdogAction": "STALE_LEASE_RELEASED",
   "processedCommandIds": [
-    "6c92ae30-6a54-4aa8-bcb7-de64a7c7c54b"
+    "6c92ae30-6a54-4aa8-bcb7-de64a7c7c54b",
+    "82e2d863-3df1-4c5b-bf22-98bd5d9596cd"
   ]
 }
