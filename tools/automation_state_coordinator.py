@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Callable
 
+from tools.automation_state_summary import render_issue_body
 from tools.stale_lease_watchdog import (
     COMMAND_END,
     COMMAND_START,
@@ -25,7 +26,6 @@ from tools.stale_lease_watchdog import (
     GitHubApi,
     extract_block,
     parse_timestamp,
-    replace_state,
 )
 
 ALLOWED_OPERATIONS = {
@@ -360,7 +360,7 @@ def run(args: argparse.Namespace) -> int:
         print("command already processed")
         return 0
 
-    updated_body = replace_state(body, result.state)
+    updated_body = render_issue_body(command, result.state)
     api.request("PATCH", f"/repos/{repository}/issues/{args.issue}", {"body": updated_body})
     print(
         json.dumps(
