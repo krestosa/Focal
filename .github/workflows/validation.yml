@@ -124,7 +124,7 @@ jobs:
           print(json.dumps(result, indent=2, sort_keys=True))
 
   mesa-glfw-probe:
-    name: Mesa GLFW probe and compile-link
+    name: Mesa GLFW probe, compile-link and render-readback
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
@@ -178,3 +178,9 @@ jobs:
           xvfb-run --auto-servernum --server-args="-screen 0 640x480x24" \
             python tests/glcli_compile_acceptance.py > focal-gl-compile-link.json
           cat focal-gl-compile-link.json
+
+      - name: Render and read back representative programs
+        run: |
+          xvfb-run --auto-servernum --server-args="-screen 0 640x480x24" \
+            python tests/glcli_render_acceptance.py > focal-gl-render-readback.json
+          cat focal-gl-render-readback.json

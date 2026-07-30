@@ -1,4 +1,4 @@
-"""Backend, source and compile dispatch for the public ``focal-gl`` executable."""
+"""Backend, source, compile and render dispatch for the public ``focal-gl`` executable."""
 from __future__ import annotations
 
 import re
@@ -8,7 +8,9 @@ from typing import Sequence
 from tools.focal_gl import (
     EXIT_COMPILE_LINK,
     EXIT_CONTEXT_UNAVAILABLE,
+    EXIT_INVARIANT,
     EXIT_OK,
+    EXIT_OPENGL_EXECUTION,
     EXIT_UNSUPPORTED,
     EXIT_USAGE,
     SCHEMA_VERSION,
@@ -20,6 +22,11 @@ from tools.focal_gl import (
     emit,
 )
 from tools.focal_gl_compile import CompileLinkError, compile_with_hidden_glfw
+from tools.focal_gl_render import (
+    RenderExecutionError,
+    RenderInvariantError,
+    render_with_hidden_glfw,
+)
 from tools.focal_gl_sources import SourceResolutionError, prepare_program
 from tools.glfw_context import GlfwContextUnavailable, create_hidden_glfw_context
 from tools.glfw_probe import GlfwProbeUnavailable, query_current_glfw_context
@@ -90,7 +97,7 @@ def _macro_token(value: str) -> str:
 
 def _prepare_sources(args):
     if not args.program:
-        raise SourceResolutionError("compile requires --program")
+        raise SourceResolutionError(f"{args.command} requires --program")
     source_root: Path | None = None
     if args.source_mode == "iris-patched":
         source_root = (
@@ -113,31 +120,51 @@ def _prepare_sources(args):
     )
 
 
+def _source_error_result(args, exc: SourceResolutionError) -> Result:
+    return Result(
+        SCHEMA_VERSION,
+        VERSION,
+        args.command,
+        "INVALID",
+        EXIT_USAGE,
+        "STATIC",
+        str(exc),
+        str(args.artifacts) if args.artifacts else None,
+    )
+
+
+def _unsupported_runtime_backend(args, unit: str) -> Result | None:
+    if args.backend in ("auto", "glfw"):
+        return None
+    return Result(
+        SCHEMA_VERSION,
+        VERSION,
+        args.command,
+        "UNSUPPORTED",
+        EXIT_UNSUPPORTED,
+        "STATIC",
+        f"{args.command} backend {args.backend} is not implemented by {unit}; use glfw or auto",
+        str(args.artifacts) if args.artifacts else None,
+    )
+
+
 def _compile_result(args) -> Result:
     try:
         prepared = _prepare_sources(args)
     except SourceResolutionError as exc:
-        return Result(
-            SCHEMA_VERSION,
-            VERSION,
-            args.command,
-            "INVALID",
-            EXIT_USAGE,
-            "STATIC",
-            str(exc),
-            str(args.artifacts) if args.artifacts else None,
-        )
+        return _source_error_result(args, exc)
 
-    if args.backend not in ("auto", "glfw"):
+    unsupported = _unsupported_runtime_backend(args, "GLCLI-004")
+    if unsupported:
         return Result(
-            SCHEMA_VERSION,
-            VERSION,
-            args.command,
-            "UNSUPPORTED",
-            EXIT_UNSUPPORTED,
-            "STATIC",
-            f"compile backend {args.backend} is not implemented by GLCLI-004; use glfw or auto",
-            str(args.artifacts) if args.artifacts else None,
+            unsupported.schemaVersion,
+            unsupported.harnessVersion,
+            unsupported.command,
+            unsupported.outcome,
+            unsupported.exitCode,
+            unsupported.evidenceLevel,
+            unsupported.message,
+            unsupported.artifacts,
             {"sourcePreparation": prepared.metadata()},
         )
 
@@ -197,6 +224,120 @@ def _compile_result(args) -> Result:
     )
 
 
+def _render_result(args) -> Result:
+    try:
+        prepared = _prepare_sources(args)
+    except SourceResolutionError as exc:
+        return _source_error_result(args, exc)
+
+    unsupported = _unsupported_runtime_backend(args, "GLCLI-005")
+    if unsupported:
+        return Result(
+            unsupported.schemaVersion,
+            unsupported.harnessVersion,
+            unsupported.command,
+            unsupported.outcome,
+            unsupported.exitCode,
+            unsupported.evidenceLevel,
+            unsupported.message,
+            unsupported.artifacts,
+            {"sourcePreparation": prepared.metadata()},
+        )
+
+    if not args.fixture:
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "INVALID",
+            EXIT_USAGE,
+            "STATIC",
+            "render requires --fixture geometry or fullscreen",
+            str(args.artifacts) if args.artifacts else None,
+            {"sourcePreparation": prepared.metadata()},
+        )
+
+    try:
+        report = render_with_hidden_glfw(
+            prepared,
+            args.gl_version,
+            args.gl_profile,
+            args.size,
+            args.fixture,
+            args.artifacts,
+        )
+    except (GlfwContextUnavailable, ContextUnavailable, OSError) as exc:
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "UNSUPPORTED",
+            EXIT_CONTEXT_UNAVAILABLE,
+            "STATIC",
+            str(exc),
+            str(args.artifacts) if args.artifacts else None,
+            {"sourcePreparation": prepared.metadata()},
+        )
+    except CompileLinkError as exc:
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "FAIL",
+            EXIT_COMPILE_LINK,
+            "STATIC",
+            str(exc),
+            str(args.artifacts) if args.artifacts else None,
+            {
+                "sourcePreparation": prepared.metadata(),
+                "compileFailure": {
+                    "phase": exc.phase,
+                    "stage": exc.stage,
+                    "log": exc.log,
+                },
+            },
+        )
+    except RenderExecutionError as exc:
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "FAIL",
+            EXIT_OPENGL_EXECUTION,
+            "GL_COMPILE_LINK",
+            str(exc),
+            str(args.artifacts) if args.artifacts else None,
+            {"sourcePreparation": prepared.metadata()},
+        )
+    except RenderInvariantError as exc:
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "FAIL",
+            EXIT_INVARIANT,
+            "GL_RENDER_READBACK",
+            str(exc),
+            str(args.artifacts) if args.artifacts else None,
+            {"sourcePreparation": prepared.metadata()},
+        )
+
+    return Result(
+        SCHEMA_VERSION,
+        VERSION,
+        args.command,
+        "PASS",
+        EXIT_OK,
+        "GL_RENDER_READBACK",
+        "framebuffer completed, draw executed and finite color/depth readback satisfied deterministic invariants",
+        str(args.artifacts) if args.artifacts else None,
+        {
+            "sourcePreparation": prepared.metadata(),
+            "render": report.metadata(),
+        },
+    )
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -204,6 +345,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         result = _dispatch_probe(args)
     elif args.command == "compile":
         result = _compile_result(args)
+    elif args.command == "render":
+        result = _render_result(args)
     else:
         from tools.focal_gl import _not_implemented_result
 

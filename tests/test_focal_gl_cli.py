@@ -58,16 +58,24 @@ class FocalGlCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, focal_gl.EXIT_USAGE)
         self.assertIn("dimensions", result.stderr)
 
-    def test_render_and_suite_remain_factual_unsupported(self) -> None:
-        for command in ("render", "suite"):
-            with self.subTest(command=command):
-                result = self.run_cli(command, "--json", "--artifacts", "artifacts")
-                self.assertEqual(result.returncode, focal_gl.EXIT_CONTEXT_UNAVAILABLE)
-                payload = json.loads(result.stdout)
-                self.assertEqual(payload["harnessVersion"], "0.3.0")
-                self.assertEqual(payload["command"], command)
-                self.assertEqual(payload["outcome"], "UNSUPPORTED")
-                self.assertEqual(payload["evidenceLevel"], "STATIC")
+    def test_render_requires_program_and_fixture(self) -> None:
+        result = self.run_cli("render", "--json", "--artifacts", "artifacts")
+        self.assertEqual(result.returncode, focal_gl.EXIT_USAGE)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["harnessVersion"], "0.3.0")
+        self.assertEqual(payload["command"], "render")
+        self.assertEqual(payload["outcome"], "INVALID")
+        self.assertEqual(payload["evidenceLevel"], "STATIC")
+        self.assertIn("requires --program", payload["message"])
+
+    def test_suite_remains_factual_unsupported(self) -> None:
+        result = self.run_cli("suite", "--json", "--artifacts", "artifacts")
+        self.assertEqual(result.returncode, focal_gl.EXIT_CONTEXT_UNAVAILABLE)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["harnessVersion"], "0.3.0")
+        self.assertEqual(payload["command"], "suite")
+        self.assertEqual(payload["outcome"], "UNSUPPORTED")
+        self.assertEqual(payload["evidenceLevel"], "STATIC")
 
     def test_compile_preserves_source_metadata_for_unimplemented_backend(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
