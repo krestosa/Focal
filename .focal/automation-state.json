@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 335,
+  "version": 336,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T15:22:40.318408Z",
   "lastResult": "PARTIAL",
   "lastRunId": "c6242ac5-17c7-48b8-8732-bcbd31717938",
-  "lastCommandId": "b0515dcf-e7ce-40d4-af0c-b30200351f18",
+  "lastCommandId": "2abbbdeb-4a41-4605-bdaa-2e3a52a93d52",
   "lastCommandAccepted": true,
-  "lastCommandReason": "TERMINAL_STATE_CONFIRMED",
-  "lastCommandProcessedAt": "2026-07-30T15:25:11.180927Z",
+  "lastCommandReason": "STATE_OBSERVED",
+  "lastCommandProcessedAt": "2026-07-30T20:19:28.099209Z",
   "note": "PR #100 remains the canonical reconciliation checkpoint; no functional or documentation mutation was completed in this cycle",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -61,7 +61,8 @@
     "aa8fa2f2-5673-466a-b36d-20a66f54f463",
     "539837e3-5587-4083-b078-b2f2e8f052da",
     "6bcbb736-a415-47d2-b59c-b7ad36bae8ef",
-    "b0515dcf-e7ce-40d4-af0c-b30200351f18"
+    "b0515dcf-e7ce-40d4-af0c-b30200351f18",
+    "2abbbdeb-4a41-4605-bdaa-2e3a52a93d52"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
