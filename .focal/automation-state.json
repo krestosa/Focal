@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 340,
+  "version": 341,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T20:37:36Z",
   "lastResult": "PASS",
   "lastRunId": "0ebac7ff-68af-4c9c-8ec8-391ef8254ce4",
-  "lastCommandId": "f84809d8-709f-410f-96a8-7861dcff54e5",
+  "lastCommandId": "ca08a11f-656c-4ee8-a55f-480953f8b882",
   "lastCommandAccepted": true,
-  "lastCommandReason": "TERMINAL_STATE_CONFIRMED",
-  "lastCommandProcessedAt": "2026-07-30T20:39:55.749645Z",
+  "lastCommandReason": "STATE_OBSERVED",
+  "lastCommandProcessedAt": "2026-07-30T20:44:15.787946Z",
   "note": "PR #100 merged; GLCLI-007 and SAFE-002 reconciled in the roadmap and Iris capability matrix with exact-head Validation success",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -66,7 +66,8 @@
     "efd8585b-4239-4cb3-873c-03acfe111bfe",
     "8c1d4fc4-f2c3-414b-b51d-1dac194f6a7d",
     "a9662cbc-7264-4e9e-ad69-f411ee615b6e",
-    "f84809d8-709f-410f-96a8-7861dcff54e5"
+    "f84809d8-709f-410f-96a8-7861dcff54e5",
+    "ca08a11f-656c-4ee8-a55f-480953f8b882"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
