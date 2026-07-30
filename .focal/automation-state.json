@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 329,
+  "version": 330,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T14:21:15.838593Z",
   "lastResult": "PARTIAL",
   "lastRunId": "aa60b184-cfc9-4eb0-9b72-289b08a25ed0",
-  "lastCommandId": "f629195e-a562-43c8-a622-a5e3ff75ed2a",
+  "lastCommandId": "914a4ff7-7666-476a-85cd-6670fddc9c9c",
   "lastCommandAccepted": true,
-  "lastCommandReason": "TERMINAL_STATE_CONFIRMED",
-  "lastCommandProcessedAt": "2026-07-30T14:23:48.967191Z",
+  "lastCommandReason": "STATE_OBSERVED",
+  "lastCommandProcessedAt": "2026-07-30T15:19:25.136080Z",
   "note": "Recovered and verified PR #100 remains open and mergeable; reconciliation is still pending",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -56,7 +56,8 @@
     "afe7d988-3a25-446e-a687-97687bbf754d",
     "7acaee76-e187-4277-81b0-8de5c36ade57",
     "7d8ece43-0906-4226-8d5f-3da9d0f6ff05",
-    "f629195e-a562-43c8-a622-a5e3ff75ed2a"
+    "f629195e-a562-43c8-a622-a5e3ff75ed2a",
+    "914a4ff7-7666-476a-85cd-6670fddc9c9c"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
