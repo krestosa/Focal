@@ -1,10 +1,4 @@
-"""Backend and source dispatch for the public ``focal-gl`` executable.
-
-The core CLI module retains the EGL implementation. This adapter adds the
-controlled hidden GLFW route, deterministic EGL-then-GLFW fallback, and the
-GLCLI-003 source-preparation boundary used by ``compile`` before GLCLI-004 adds
-real OpenGL stage compilation and program linking.
-"""
+"""Backend, source and compile dispatch for the public ``focal-gl`` executable."""
 from __future__ import annotations
 
 import re
@@ -12,6 +6,7 @@ from pathlib import Path
 from typing import Sequence
 
 from tools.focal_gl import (
+    EXIT_COMPILE_LINK,
     EXIT_CONTEXT_UNAVAILABLE,
     EXIT_OK,
     EXIT_UNSUPPORTED,
@@ -24,6 +19,7 @@ from tools.focal_gl import (
     build_parser,
     emit,
 )
+from tools.focal_gl_compile import CompileLinkError, compile_with_hidden_glfw
 from tools.focal_gl_sources import SourceResolutionError, prepare_program
 from tools.glfw_context import GlfwContextUnavailable, create_hidden_glfw_context
 from tools.glfw_probe import GlfwProbeUnavailable, query_current_glfw_context
@@ -31,11 +27,7 @@ from tools.glfw_probe import GlfwProbeUnavailable, query_current_glfw_context
 
 def _glfw_probe_result(args) -> Result:
     try:
-        with create_hidden_glfw_context(
-            args.gl_version,
-            args.gl_profile,
-            args.size,
-        ) as context_handle:
+        with create_hidden_glfw_context(args.gl_version, args.gl_profile, args.size) as context_handle:
             context = query_current_glfw_context(
                 context_handle,
                 args.gl_version,
@@ -60,7 +52,7 @@ def _glfw_probe_result(args) -> Result:
         "PASS",
         EXIT_OK,
         "STATIC",
-        "real hidden GLFW OpenGL context created and queried; shader compile/link evidence remains pending",
+        "real hidden GLFW OpenGL context created and queried",
         str(args.artifacts) if args.artifacts else None,
         context,
     )
@@ -96,19 +88,9 @@ def _macro_token(value: str) -> str:
     return token or "DEFAULT"
 
 
-def _compile_source_result(args) -> Result:
+def _prepare_sources(args):
     if not args.program:
-        return Result(
-            SCHEMA_VERSION,
-            VERSION,
-            args.command,
-            "INVALID",
-            EXIT_USAGE,
-            "STATIC",
-            "compile requires --program",
-            str(args.artifacts) if args.artifacts else None,
-        )
-
+        raise SourceResolutionError("compile requires --program")
     source_root: Path | None = None
     if args.source_mode == "iris-patched":
         source_root = (
@@ -122,15 +104,18 @@ def _compile_source_result(args) -> Result:
             f"FOCAL_PROFILE_{_macro_token(args.profile)}=1",
             f"FOCAL_DIMENSION_{_macro_token(args.dimension)}=1",
         )
+    return prepare_program(
+        pack=args.pack,
+        source_root=source_root,
+        program=args.program,
+        source_mode=args.source_mode,
+        define_values=define_values,
+    )
 
+
+def _compile_result(args) -> Result:
     try:
-        prepared = prepare_program(
-            pack=args.pack,
-            source_root=source_root,
-            program=args.program,
-            source_mode=args.source_mode,
-            define_values=define_values,
-        )
+        prepared = _prepare_sources(args)
     except SourceResolutionError as exc:
         return Result(
             SCHEMA_VERSION,
@@ -143,16 +128,72 @@ def _compile_source_result(args) -> Result:
             str(args.artifacts) if args.artifacts else None,
         )
 
+    if args.backend not in ("auto", "glfw"):
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "UNSUPPORTED",
+            EXIT_UNSUPPORTED,
+            "STATIC",
+            f"compile backend {args.backend} is not implemented by GLCLI-004; use glfw or auto",
+            str(args.artifacts) if args.artifacts else None,
+            {"sourcePreparation": prepared.metadata()},
+        )
+
+    try:
+        report = compile_with_hidden_glfw(
+            prepared,
+            args.gl_version,
+            args.gl_profile,
+            args.size,
+        )
+    except (GlfwContextUnavailable, ContextUnavailable, OSError) as exc:
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "UNSUPPORTED",
+            EXIT_CONTEXT_UNAVAILABLE,
+            "STATIC",
+            str(exc),
+            str(args.artifacts) if args.artifacts else None,
+            {"sourcePreparation": prepared.metadata()},
+        )
+    except CompileLinkError as exc:
+        context = {
+            "sourcePreparation": prepared.metadata(),
+            "compileFailure": {
+                "phase": exc.phase,
+                "stage": exc.stage,
+                "log": exc.log,
+            },
+        }
+        return Result(
+            SCHEMA_VERSION,
+            VERSION,
+            args.command,
+            "FAIL",
+            EXIT_COMPILE_LINK,
+            "STATIC",
+            str(exc),
+            str(args.artifacts) if args.artifacts else None,
+            context,
+        )
+
     return Result(
         SCHEMA_VERSION,
         VERSION,
         args.command,
-        "UNSUPPORTED",
-        EXIT_UNSUPPORTED,
-        "STATIC",
-        "shader sources prepared and hashed; real OpenGL compile/link remains pending GLCLI-004",
+        "PASS",
+        EXIT_OK,
+        "GL_COMPILE_LINK",
+        "all shader stages compiled and the complete program linked in a real hidden OpenGL context",
         str(args.artifacts) if args.artifacts else None,
-        {"sourcePreparation": prepared.metadata()},
+        {
+            "sourcePreparation": prepared.metadata(),
+            "compileLink": report.metadata(),
+        },
     )
 
 
@@ -162,7 +203,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     if args.command == "probe":
         result = _dispatch_probe(args)
     elif args.command == "compile":
-        result = _compile_source_result(args)
+        result = _compile_result(args)
     else:
         from tools.focal_gl import _not_implemented_result
 
