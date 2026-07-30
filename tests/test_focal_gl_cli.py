@@ -1,6 +1,7 @@
 import json
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -57,8 +58,8 @@ class FocalGlCliTests(unittest.TestCase):
         self.assertEqual(result.returncode, focal_gl.EXIT_USAGE)
         self.assertIn("dimensions", result.stderr)
 
-    def test_non_probe_commands_remain_factual_unsupported(self) -> None:
-        for command in ("compile", "render", "suite"):
+    def test_render_and_suite_remain_factual_unsupported(self) -> None:
+        for command in ("render", "suite"):
             with self.subTest(command=command):
                 result = self.run_cli(command, "--json", "--artifacts", "artifacts")
                 self.assertEqual(result.returncode, focal_gl.EXIT_CONTEXT_UNAVAILABLE)
@@ -67,6 +68,51 @@ class FocalGlCliTests(unittest.TestCase):
                 self.assertEqual(payload["command"], command)
                 self.assertEqual(payload["outcome"], "UNSUPPORTED")
                 self.assertEqual(payload["evidenceLevel"], "STATIC")
+
+    def test_compile_prepares_sources_without_claiming_compile_link(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            shaders = root / "shaders"
+            shaders.mkdir()
+            (shaders / "common.glsl").write_text("const float VALUE = 1.0;\n", encoding="utf-8")
+            (shaders / "example.vsh").write_text(
+                '#version 330 core\n#include "common.glsl"\nvoid main() { gl_Position = vec4(VALUE); }\n',
+                encoding="utf-8",
+            )
+            result = self.run_cli(
+                "compile",
+                "--pack",
+                str(root),
+                "--program",
+                "example",
+                "--profile",
+                "BALANCED",
+                "--dimension",
+                "the_nether",
+                "--source-mode",
+                "preprocessed",
+                "--json",
+            )
+        self.assertEqual(result.returncode, focal_gl.EXIT_UNSUPPORTED, result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertEqual(payload["outcome"], "UNSUPPORTED")
+        self.assertEqual(payload["evidenceLevel"], "STATIC")
+        preparation = payload["context"]["sourcePreparation"]
+        self.assertEqual(preparation["sourceMode"], "preprocessed")
+        self.assertTrue(preparation["includesResolved"])
+        self.assertEqual(
+            preparation["defines"],
+            {"FOCAL_DIMENSION_THE_NETHER": "1", "FOCAL_PROFILE_BALANCED": "1"},
+        )
+        self.assertEqual(preparation["stages"][0]["stage"], "vsh")
+        self.assertEqual(len(preparation["stages"][0]["sha256"]), 64)
+        self.assertNotIn("source", preparation["stages"][0])
+        self.assertIn("GLCLI-004", payload["message"])
+
+    def test_compile_invalid_request_is_usage_error(self) -> None:
+        result = self.run_cli("compile", "--json")
+        self.assertEqual(result.returncode, focal_gl.EXIT_USAGE)
+        self.assertEqual(json.loads(result.stdout)["outcome"], "INVALID")
 
     def test_unimplemented_backend_is_factual_unsupported(self) -> None:
         result = self.run_cli("probe", "--backend", "wgl", "--json")
@@ -101,11 +147,7 @@ class FocalGlCliTests(unittest.TestCase):
 
     def test_egl_probe_reports_real_context_or_factual_unavailability(self) -> None:
         result = self.run_cli("probe", "--backend", "egl", "--json")
-        self.assertIn(
-            result.returncode,
-            (focal_gl.EXIT_OK, focal_gl.EXIT_CONTEXT_UNAVAILABLE),
-            result.stderr,
-        )
+        self.assertIn(result.returncode, (focal_gl.EXIT_OK, focal_gl.EXIT_CONTEXT_UNAVAILABLE), result.stderr)
         payload = json.loads(result.stdout)
         if result.returncode == focal_gl.EXIT_OK:
             self.assertEqual(payload["outcome"], "PASS")
@@ -121,38 +163,6 @@ class FocalGlCliTests(unittest.TestCase):
             self.assertEqual(payload["outcome"], "UNSUPPORTED")
             self.assertIsNone(payload["context"])
             self.assertTrue(payload["message"])
-
-    def test_common_contract_arguments_parse(self) -> None:
-        result = self.run_cli(
-            "compile",
-            "--pack",
-            "shaders",
-            "--program",
-            "gbuffers_basic",
-            "--fixture",
-            "triangle",
-            "--profile",
-            "BALANCED",
-            "--dimension",
-            "the_nether",
-            "--backend",
-            "egl",
-            "--gl-version",
-            "4.3",
-            "--gl-profile",
-            "core",
-            "--size",
-            "640x360",
-            "--frames",
-            "2",
-            "--timeout",
-            "5",
-            "--source-mode",
-            "preprocessed",
-            "--json",
-        )
-        self.assertEqual(result.returncode, focal_gl.EXIT_CONTEXT_UNAVAILABLE)
-        self.assertEqual(json.loads(result.stdout)["command"], "compile")
 
 
 if __name__ == "__main__":
