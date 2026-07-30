@@ -1,14 +1,14 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 309,
+  "version": 310,
   "status": "working",
   "mode": "normal",
-  "phase": "LOCK_ACQUISITION",
+  "phase": "REMOTE_STATE_AUDIT",
   "runId": "878990bb-ab4b-486f-a44f-b4c61ae13383",
   "startedAt": "2026-07-30T12:29:01Z",
-  "heartbeatAt": "2026-07-30T12:31:12Z",
-  "leaseExpiresAt": "2026-07-30T13:01:12Z",
+  "heartbeatAt": "2026-07-30T12:32:10Z",
+  "leaseExpiresAt": "2026-07-30T13:02:10Z",
   "softStopAt": "2026-07-30T13:19:01Z",
   "cleanupAt": "2026-07-30T13:24:01Z",
   "hardKillAt": "2026-07-30T13:27:31Z",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T08:19:42.011156Z",
   "lastResult": "PASS",
   "lastRunId": "9a349a86-05f3-4c87-9220-cd5bea11b35c",
-  "lastCommandId": "cc00e5cd-288d-4571-a40f-f258ce28c1cf",
+  "lastCommandId": "ca297205-3754-4320-b21e-07f9d2d46656",
   "lastCommandAccepted": true,
-  "lastCommandReason": "LEASE_ACQUIRED",
-  "lastCommandProcessedAt": "2026-07-30T12:31:58.082002Z",
+  "lastCommandReason": "HEARTBEAT_ACCEPTED",
+  "lastCommandProcessedAt": "2026-07-30T12:32:54.065578Z",
   "note": null,
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -40,7 +40,8 @@
   "processedCommandIds": [
     "6c92ae30-6a54-4aa8-bcb7-de64a7c7c54b",
     "82e2d863-3df1-4c5b-bf22-98bd5d9596cd",
-    "cc00e5cd-288d-4571-a40f-f258ce28c1cf"
+    "cc00e5cd-288d-4571-a40f-f258ce28c1cf",
+    "ca297205-3754-4320-b21e-07f9d2d46656"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
@@ -50,6 +51,14 @@
       "workBranchHeadSha": null,
       "pullRequest": null,
       "processedAt": "2026-07-30T12:31:58.082002Z"
+    },
+    "REMOTE_STATE_AUDIT": {
+      "commandId": "ca297205-3754-4320-b21e-07f9d2d46656",
+      "checkpointSha": "d4323dfa55e6dbd746862b201127ae6663990438",
+      "workBranch": null,
+      "workBranchHeadSha": null,
+      "pullRequest": null,
+      "processedAt": "2026-07-30T12:32:54.065578Z"
     }
   }
 }
