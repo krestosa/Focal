@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 316,
+  "version": 317,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T13:12:00Z",
   "lastResult": "PASS",
   "lastRunId": "878990bb-ab4b-486f-a44f-b4c61ae13383",
-  "lastCommandId": "54e956e3-175f-4d42-a0ae-1249cedd3893",
+  "lastCommandId": "0085073f-f5cb-459a-b787-5ec5c6cf054e",
   "lastCommandAccepted": true,
-  "lastCommandReason": "LEASE_RELEASED",
-  "lastCommandProcessedAt": "2026-07-30T13:13:00.727442Z",
+  "lastCommandReason": "TERMINAL_STATE_CONFIRMED",
+  "lastCommandProcessedAt": "2026-07-30T13:14:25.362557Z",
   "note": "GLCLI-005 implementation merged via PR #97 after Validation run 30544545413; reconciliation merged via PR #98 after run 30545526138",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -47,7 +47,8 @@
     "c4b0bc0b-c170-40b6-a0d4-c9b0cb988594",
     "69a15ed4-f377-44eb-8716-f5048a9c3dbd",
     "f59fbc9d-edc5-46e0-bb2f-4b7315ce6b0b",
-    "54e956e3-175f-4d42-a0ae-1249cedd3893"
+    "54e956e3-175f-4d42-a0ae-1249cedd3893",
+    "0085073f-f5cb-459a-b787-5ec5c6cf054e"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
@@ -100,6 +101,6 @@
     "note": "Roadmap revision 18, Iris matrix and canonical GLCLI-005 evidence merged after exact-head Validation run 30545526138 succeeded",
     "recordedAt": "2026-07-30T13:13:00.727442Z"
   },
-  "terminalVerifiedAt": null,
-  "terminalVerifiedRunId": null
+  "terminalVerifiedAt": "2026-07-30T13:14:25.362557Z",
+  "terminalVerifiedRunId": "878990bb-ab4b-486f-a44f-b4c61ae13383"
 }
