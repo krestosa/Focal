@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Iterable
 
+from tools.automation_state_summary import render_issue_body
+
 COMMAND_START = "<!-- focal-command:v3 -->"
 COMMAND_END = "<!-- /focal-command -->"
 STATE_START = "<!-- focal-state:v3 -->"
@@ -366,7 +368,7 @@ def run(args: argparse.Namespace) -> int:
 
     repaired_at = datetime.now(timezone.utc)
     new_state = repaired_state(current_state, repaired_at=repaired_at)
-    updated_body = replace_state(current_body, new_state)
+    updated_body = render_issue_body(current_command, new_state)
     if not args.dry_run:
         api.request("PATCH", issue_path, {"body": updated_body})
         summary["action"] = "released"
