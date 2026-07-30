@@ -1,14 +1,14 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 337,
+  "version": 338,
   "status": "working",
   "mode": "normal",
-  "phase": "LOCK_ACQUISITION",
+  "phase": "REMOTE_STATE_AUDIT",
   "runId": "0ebac7ff-68af-4c9c-8ec8-391ef8254ce4",
   "startedAt": "2026-07-30T20:20:12.595710Z",
-  "heartbeatAt": "2026-07-30T20:20:12.595710Z",
-  "leaseExpiresAt": "2026-07-30T20:50:12.595710Z",
+  "heartbeatAt": "2026-07-30T20:21:31.082867Z",
+  "leaseExpiresAt": "2026-07-30T20:51:31.082867Z",
   "softStopAt": "2026-07-30T21:10:12.595710Z",
   "cleanupAt": "2026-07-30T21:15:12.595710Z",
   "hardKillAt": "2026-07-30T21:18:42.595710Z",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-30T15:22:40.318408Z",
   "lastResult": "PARTIAL",
   "lastRunId": "c6242ac5-17c7-48b8-8732-bcbd31717938",
-  "lastCommandId": "efd8585b-4239-4cb3-873c-03acfe111bfe",
+  "lastCommandId": "8c1d4fc4-f2c3-414b-b51d-1dac194f6a7d",
   "lastCommandAccepted": true,
-  "lastCommandReason": "LEASE_ACQUIRED",
-  "lastCommandProcessedAt": "2026-07-30T20:21:16.449656Z",
+  "lastCommandReason": "HEARTBEAT_ACCEPTED",
+  "lastCommandProcessedAt": "2026-07-30T20:22:30.118419Z",
   "note": null,
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -63,7 +63,8 @@
     "6bcbb736-a415-47d2-b59c-b7ad36bae8ef",
     "b0515dcf-e7ce-40d4-af0c-b30200351f18",
     "2abbbdeb-4a41-4605-bdaa-2e3a52a93d52",
-    "efd8585b-4239-4cb3-873c-03acfe111bfe"
+    "efd8585b-4239-4cb3-873c-03acfe111bfe",
+    "8c1d4fc4-f2c3-414b-b51d-1dac194f6a7d"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
@@ -75,12 +76,12 @@
       "processedAt": "2026-07-30T20:21:16.449656Z"
     },
     "REMOTE_STATE_AUDIT": {
-      "commandId": "539837e3-5587-4083-b078-b2f2e8f052da",
-      "checkpointSha": null,
+      "commandId": "8c1d4fc4-f2c3-414b-b51d-1dac194f6a7d",
+      "checkpointSha": "1859a330336b20296dfba69ae74cc0d7cbebe21d",
       "workBranch": null,
       "workBranchHeadSha": null,
       "pullRequest": null,
-      "processedAt": "2026-07-30T15:21:53.658331Z"
+      "processedAt": "2026-07-30T20:22:30.118419Z"
     },
     "IMPLEMENTATION": {
       "commandId": "af3dc639-d862-45bc-b3e4-7a8dc064e9f4",
