@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 363,
+  "version": 364,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -135,29 +135,13 @@
   "functionalCheckpointSha": "d46a0649a67e8853a3646c6117d32ae63c2bd61a",
   "terminalVerifiedAt": "2026-07-31T03:36:00.615692Z",
   "terminalVerifiedRunId": "28c3a774-a3ef-42fb-a701-6f906b5349e2",
-  "lastRepositoryMaintenanceAt": "2026-07-31T03:48:26.542852Z",
+  "lastRepositoryMaintenanceAt": "2026-07-31T09:15:13.591481Z",
   "lastRepositoryMaintenance": {
     "action": "completed",
     "scope": "all",
-    "commandId": "schedule-30602473500-1",
+    "commandId": "schedule-30619228589-1",
     "garbagePaths": [],
-    "branches": [
-      "docs/glcli-002-wgl-reconciliation",
-      "docs/glcli-007-reconciliation",
-      "docs/glcli-008-reconciliation",
-      "feature/glcli-002-wgl-probe",
-      "feature/glcli-002-wgl-probe-candidate",
-      "feature/glcli-002-wgl-probe-canonical",
-      "feature/glcli-002-wgl-probe-checkpoint",
-      "feature/glcli-002-wgl-probe-delivery",
-      "feature/glcli-002-wgl-probe-final",
-      "feature/glcli-002-wgl-probe-merge",
-      "feature/glcli-002-wgl-probe-open",
-      "feature/glcli-002-wgl-probe-pr",
-      "feature/glcli-002-wgl-probe-review",
-      "feature/glcli-008-evidence-matrix",
-      "noop-placeholder"
-    ],
+    "branches": [],
     "skippedBranches": [
       {
         "branch": "agent/fix-automation-state-app-edits",
@@ -201,34 +185,19 @@
       }
     ],
     "defaultBranchHeadBefore": "d46a0649a67e8853a3646c6117d32ae63c2bd61a",
-    "branchCountBefore": 25,
+    "branchCountBefore": 10,
     "defaultBranchHeadAfter": "d46a0649a67e8853a3646c6117d32ae63c2bd61a",
     "branchCountAfter": 10,
     "createdBranches": [],
-    "deletedBranches": [
-      "docs/glcli-002-wgl-reconciliation",
-      "docs/glcli-007-reconciliation",
-      "docs/glcli-008-reconciliation",
-      "feature/glcli-002-wgl-probe",
-      "feature/glcli-002-wgl-probe-candidate",
-      "feature/glcli-002-wgl-probe-canonical",
-      "feature/glcli-002-wgl-probe-checkpoint",
-      "feature/glcli-002-wgl-probe-delivery",
-      "feature/glcli-002-wgl-probe-final",
-      "feature/glcli-002-wgl-probe-merge",
-      "feature/glcli-002-wgl-probe-open",
-      "feature/glcli-002-wgl-probe-pr",
-      "feature/glcli-002-wgl-probe-review",
-      "feature/glcli-008-evidence-matrix",
-      "noop-placeholder"
-    ]
+    "deletedBranches": []
   },
-  "lastRepositoryMaintenanceCommandId": "schedule-30602473500-1",
+  "lastRepositoryMaintenanceCommandId": "schedule-30619228589-1",
   "lastRepositoryMaintenanceReason": "MAINTENANCE_COMPLETED",
   "processedMaintenanceCommandIds": [
     "8a0ad78e-c5de-4b04-aa85-4d33ff61df45",
     "schedule-30551969254-1",
     "schedule-30576482878-1",
-    "schedule-30602473500-1"
+    "schedule-30602473500-1",
+    "schedule-30619228589-1"
   ]
 }
