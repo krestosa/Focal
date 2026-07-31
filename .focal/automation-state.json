@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 371,
+  "version": 372,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-31T14:17:09.298443Z",
   "lastResult": "PASS",
   "lastRunId": "babc7945-635b-488a-af7e-ed1c0b6c3c0b",
-  "lastCommandId": "b9b67ed0-94c0-4573-be3c-d72669729857",
+  "lastCommandId": "128e7194-71ff-4a7b-a7f0-8f28361c54fe",
   "lastCommandAccepted": true,
-  "lastCommandReason": "LEASE_RELEASED",
-  "lastCommandProcessedAt": "2026-07-31T14:18:45.468809Z",
+  "lastCommandReason": "TERMINAL_STATE_CONFIRMED",
+  "lastCommandProcessedAt": "2026-07-31T14:21:08.341663Z",
   "note": "Reconciled native WGL roadmap and Iris capability evidence through PR #107; Validation run 30637377872 passed and main advanced to 45f5b4fd41f482fc56b914b432299237b5a4b92e",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -95,7 +95,8 @@
     "7a613357-0a4f-4d70-9123-a943132d29ca",
     "9653c25f-e430-41cf-9db6-83d384f76ed2",
     "5bcc4156-a9c4-489a-831d-33a44c256bfe",
-    "b9b67ed0-94c0-4573-be3c-d72669729857"
+    "b9b67ed0-94c0-4573-be3c-d72669729857",
+    "128e7194-71ff-4a7b-a7f0-8f28361c54fe"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
@@ -140,8 +141,8 @@
     }
   },
   "functionalCheckpointSha": "45f5b4fd41f482fc56b914b432299237b5a4b92e",
-  "terminalVerifiedAt": null,
-  "terminalVerifiedRunId": null,
+  "terminalVerifiedAt": "2026-07-31T14:21:08.341663Z",
+  "terminalVerifiedRunId": "babc7945-635b-488a-af7e-ed1c0b6c3c0b",
   "lastRepositoryMaintenanceAt": "2026-07-31T09:15:13.591481Z",
   "lastRepositoryMaintenance": {
     "action": "completed",
