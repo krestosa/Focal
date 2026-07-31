@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 361,
+  "version": 362,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-31T03:31:58.320305Z",
   "lastResult": "PARTIAL",
   "lastRunId": "28c3a774-a3ef-42fb-a701-6f906b5349e2",
-  "lastCommandId": "8875f955-3eef-411a-8539-5d0dea86df07",
+  "lastCommandId": "f5929f43-98b3-4f92-9d02-680b1c8df814",
   "lastCommandAccepted": true,
-  "lastCommandReason": "LEASE_RELEASED",
-  "lastCommandProcessedAt": "2026-07-31T03:33:17.822326Z",
+  "lastCommandReason": "TERMINAL_STATE_CONFIRMED",
+  "lastCommandProcessedAt": "2026-07-31T03:36:00.615692Z",
   "note": "Native WGL probe and evidence merged through PRs #105 and #106; ROADMAP.md and IRIS-CAPABILITY-MATRIX.md reconciliation remains pending",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -87,7 +87,8 @@
     "db480a01-df3b-41d4-9202-97263517a1f4",
     "b3feacdd-7462-4844-9dfb-c8b7f3c78c9f",
     "151b8f43-461f-4a43-a872-332b0d84330f",
-    "8875f955-3eef-411a-8539-5d0dea86df07"
+    "8875f955-3eef-411a-8539-5d0dea86df07",
+    "f5929f43-98b3-4f92-9d02-680b1c8df814"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
@@ -132,8 +133,8 @@
     }
   },
   "functionalCheckpointSha": "d46a0649a67e8853a3646c6117d32ae63c2bd61a",
-  "terminalVerifiedAt": null,
-  "terminalVerifiedRunId": null,
+  "terminalVerifiedAt": "2026-07-31T03:36:00.615692Z",
+  "terminalVerifiedRunId": "28c3a774-a3ef-42fb-a701-6f906b5349e2",
   "lastRepositoryMaintenanceAt": "2026-07-30T19:49:50.762980Z",
   "lastRepositoryMaintenance": {
     "action": "completed",
