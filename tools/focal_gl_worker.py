@@ -145,14 +145,26 @@ def _worker_failure_result(args, execution: WorkerExecution) -> Result:
     )
 
 
+def _dispatch_isolated(arguments: Sequence[str]) -> int:
+    from tools.focal_gl_dispatch import main as dispatch_main
+
+    args = build_parser().parse_args(list(arguments))
+    if args.command == "probe" and args.backend == "wgl":
+        from tools.wgl_dispatch import wgl_probe_result
+
+        result = wgl_probe_result(args)
+        emit(result, args.json_output)
+        return result.exitCode
+    return dispatch_main(arguments)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     from tools.focal_gl_dispatch import main as dispatch_main
 
     arguments = list(sys.argv[1:] if argv is None else argv)
     if os.environ.get(_WORKER_ENV) == "1":
-        return dispatch_main(arguments)
+        return _dispatch_isolated(arguments)
 
-    # Preserve argparse's direct help, version and usage behavior without a worker.
     if not arguments or "--help" in arguments or "-h" in arguments or "--version" in arguments:
         return dispatch_main(arguments)
 
