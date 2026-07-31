@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 357,
+  "version": 358,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -21,10 +21,10 @@
   "lastCompletedAt": "2026-07-31T01:42:23Z",
   "lastResult": "PARTIAL",
   "lastRunId": "b12efc3b-ade0-4dc5-b0a7-ca57a65d1897",
-  "lastCommandId": "70e78d02-e4e2-4489-8afc-5856afecc03b",
+  "lastCommandId": "db480a01-df3b-41d4-9202-97263517a1f4",
   "lastCommandAccepted": true,
-  "lastCommandReason": "TERMINAL_STATE_CONFIRMED",
-  "lastCommandProcessedAt": "2026-07-31T01:44:35.733905Z",
+  "lastCommandReason": "STATE_OBSERVED",
+  "lastCommandProcessedAt": "2026-07-31T03:19:02.953173Z",
   "note": "Native WGL probe implementation preserved on feature/glcli-002-wgl-probe; validation and delivery remain pending; accidental alias branches require repository maintenance",
   "lastAbandonedRunId": "a16089e9-2aaf-40ab-98e5-d24e11a4e4a4",
   "lastAbandonedPhase": "REMOTE_STATE_AUDIT",
@@ -83,7 +83,8 @@
     "fe921b97-1a2b-4ee1-8dad-88a92831f1e4",
     "f3d34df4-f3b8-4a80-9ad2-83ac6f180da6",
     "9877d9f9-9eeb-4e4b-a7f0-e25d06a511dc",
-    "70e78d02-e4e2-4489-8afc-5856afecc03b"
+    "70e78d02-e4e2-4489-8afc-5856afecc03b",
+    "db480a01-df3b-41d4-9202-97263517a1f4"
   ],
   "phaseCheckpoints": {
     "LOCK_ACQUISITION": {
