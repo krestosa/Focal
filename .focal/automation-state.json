@@ -1,7 +1,7 @@
 {
   "schemaVersion": 3,
   "repository": "krestosa/Focal",
-  "version": 396,
+  "version": 397,
   "status": "idle",
   "mode": "normal",
   "phase": "idle",
@@ -143,11 +143,11 @@
   "functionalCheckpointSha": "45f5b4fd41f482fc56b914b432299237b5a4b92e",
   "terminalVerifiedAt": "2026-07-31T14:21:08.341663Z",
   "terminalVerifiedRunId": "babc7945-635b-488a-af7e-ed1c0b6c3c0b",
-  "lastRepositoryMaintenanceAt": "2026-08-06T08:52:00.756215Z",
+  "lastRepositoryMaintenanceAt": "2026-08-06T14:33:21.817733Z",
   "lastRepositoryMaintenance": {
     "action": "completed",
     "scope": "all",
-    "commandId": "schedule-31086633779-1",
+    "commandId": "schedule-31111370222-1",
     "garbagePaths": [],
     "branches": [],
     "skippedBranches": [
@@ -199,7 +199,7 @@
     "createdBranches": [],
     "deletedBranches": []
   },
-  "lastRepositoryMaintenanceCommandId": "schedule-31086633779-1",
+  "lastRepositoryMaintenanceCommandId": "schedule-31111370222-1",
   "lastRepositoryMaintenanceReason": "MAINTENANCE_COMPLETED",
   "processedMaintenanceCommandIds": [
     "8a0ad78e-c5de-4b04-aa85-4d33ff61df45",
@@ -230,6 +230,7 @@
     "schedule-31015586669-1",
     "schedule-31041442542-1",
     "schedule-31068779214-1",
-    "schedule-31086633779-1"
+    "schedule-31086633779-1",
+    "schedule-31111370222-1"
   ]
 }
